@@ -1,0 +1,77 @@
+TearsGrammar {
+	GA = filename* DefinesAndConstsAndAlias* Config* Guard? Assertion?
+
+        DefinesAndConstsAndAlias = (Define | Constant | Alias)+
+
+	Define = caseInsensitive<"def"> defname   Expr
+
+	defname = param
+
+	Config = caseInsensitive<"where"> ComplexExpr
+
+	Constant = caseInsensitive<"const"> param "=" limit
+
+  Alias = caseInsensitive<"alias"> defname "=" param
+
+	Guard = (caseInsensitive<"while"> | caseInsensitive<"when">) ComplexExpr
+
+	Assertion = caseInsensitive<"shall"> ComplexExpr
+
+	ComplexExpr = Expr /* | NotExpr
+
+  NotExpr = caseInsensitive<"not"> ComplexExpr
+  */
+
+	TimeExpr = TimeType sign TimeValue
+
+	TimeType = (caseInsensitive<"within"> | caseInsensitive<"for">)
+
+	TimeValue = (TimeValue2 | caseInsensitive<"inf">)
+
+	TimeValue2 = Float TimeUnit
+
+	Float = digit+ ("." digit+)?
+
+	TimeUnit = ("s" | "ms")
+
+	sign = ("+" | "-" | "")
+
+	Expr = LogicExpr (Conj LogicExpr)*
+
+	/*
+  LogicExpr = (NonPara  | Para | Gafunction | defname | limit) TimeExpr*
+  */
+
+    LogicExpr = NegatedLogicExpr | LogicExpr2
+    NegatedLogicExpr = caseInsensitive<"not"> LogicExpr2
+    LogicExpr2 = (NonPara  | Para | Gafunction | defname | limit) TimeExpr*
+
+
+	Para = "(" Expr ")"
+
+	NonPara = Lhs Operator Rhs
+
+	Operator = ("==" | "!=" | "~=" | ">=" | ">" | "<=" | "<")
+
+	Lhs = Rhs
+
+	Rhs = param | limit | Gafunction
+
+	Gafunction = param (" " | "\n" | "\t")* "(" (" " | "\n" | "\t")* Funcargs (" " | "\n" | "\t")* ")"  (Operator Rhs)*
+
+	/*Funcargs = Expr ("," Expr)*
+  */
+  Funcargs = FuncArg ("," FuncArg)*
+  FuncArg = Expr | limit | caseInsensitive<"inf"> | caseInsensitive<"neginf">
+	param = quotedparam | paramstr
+  quotedparam = "'" qparamstr "'"
+  paramstr = ~(caseInsensitive<"inf"> | caseInsensitive<"while"> | caseInsensitive<"when"> | caseInsensitive<"shall"> | caseInsensitive<"for"> | caseInsensitive<"within"> | caseInsensitive<"const"> | caseInsensitive<"alias"> | caseInsensitive<"not">) ("_" | "/" | "[" | "]" | "." | "|" | letter)+ ("_" | "/" | "." | "|"| alnum)*
+
+  qparamstr = ~(caseInsensitive<"inf"> |caseInsensitive<"while"> | caseInsensitive<"when"> | caseInsensitive<"shall"> | caseInsensitive<"for"> | caseInsensitive<"within"> | caseInsensitive<"const"> | caseInsensitive<"alias"> | caseInsensitive<"not">) ("_" | "-" | " " | "/" | "[" | "]" | "." | "|" | letter | "(" | ")" | ":")+ ("_" |"-"| " "| "/" | "[" | "]" | "." | "|"| alnum)*
+
+	limit = sign digit+ ("." digit+)?
+
+	Conj = ("and" | "or" | "->" | "after")
+
+	filename = "@" (alnum | "_" | ".")+
+}

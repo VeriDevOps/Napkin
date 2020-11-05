@@ -1,0 +1,23 @@
+﻿Add an entry to supportedModes in ace/lib/ace/ext/modelist.js (only the first time a new mode is defined).
+
+Create some syntax highlighting rules files in js/ace-tears/: 
+	tears.js – main file
+	tears_highlight_rules - 
+	[tears_worker] – inte alla har det
+
+Copy these rules into the ace src-path:
+	cp -f js/ace-tears/*.js js/ace/lib/ace/mode/
+
+[Only once: npm install. If this is forgotten, the below node compilation will throw a missing module error.]
+
+Build in js/ace/:
+	node ./Makefile.dryice.js -m -nc
+	node ./Makefile.dryice.js -nc
+
+Wrap ace into brace from js/brace/build/:
+	node ./update.js -local
+
+OR
+
+Just run: 
+	./make_tears_highligher.sh

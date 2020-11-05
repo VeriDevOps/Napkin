@@ -1,0 +1,34 @@
+This directory (gaeditorweb2.1/client/js-batch) contains those files from
+../js which are necessary to run GA evaluation in batch, that is, without
+a browser or server.
+
+============================================================
+A number of modifications were necessary for running in Node.js:
+
+Node.js does not have 'import', so 'require' is used instead.
+
+Export is done in a different way.
+
+Util.isValidFunction worked by looking at a variable containing all
+names from Operator, constructed by 'import'. Now use an explicit list.
+
+When Util required Operators and vice versa, the code in Operators thought
+that Util.xxx were undefined.
+Removed the require of Operators from Util.
+
+EventBus is in principle unnecessary, but since it keeps the signal
+data structure, changes in other places could be minimal when it is
+kept. It does not do any socket or actual bus management.
+
+SignalList.loadSignals was copied to EventBus, as well as updateXmax.
+
+The language construct
+    for ([key, value] ...
+needed key and value to be declared first.
+
+
+============================================================
+Example calls:
+
+node batchEvaluate.js ../../../../resources/tc/paper_uc/use_case_3.ga /home/arndt/saga/svn/saga/resources/loggar/paper_logs/paper_example.jsondiff
+
