@@ -18,26 +18,21 @@ sudo apt-get install --yes npm
 
 # WINDOWS 
 * https://nodejs.org/en/.    10.16.3 LTS
-*  When you have cloned the src (see below)
-* In client dir do  
-`npm install`
-
-
+* Install python (e.g., Anaconda as shown further down)
+ 
 # COMMON
 ```
 npm install style-loader --save
-
-sudo apt-get install --yes subversion
 sudo apt-get install --yes git
 
 sudo apt install python3-pip3
 sudo pip3 install autobahn
 sudo pip3 install bottle
 ````
-## Cloning the source 
+# Cloning the source 
 
 Follow the guide on how 
-Clone from the
+Clone from the github https://github.blog/2013-09-03-two-factor-authentication/#how-does-it-work-for-command-line-git
 
 `git clone https://github.com/scania/saga.git`
 Give your personal access token instead of the password if you use 2FA. If you do not know what it is, you should probably try with your password. 
@@ -54,7 +49,7 @@ npm install webpack@^2.2.0
 ```
 
 For unknown reason, there is a npm_modules under 
-`client/js` as well. 
+`client/js/brace` as well. Probably only needed if you rebuild ace editor. A `npm install .`should do it if that is the case. 
 
 ````
 cd client/js
