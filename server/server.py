@@ -1,5 +1,7 @@
 ################################################################################
-# Scania (C) 2017
+# SPDX-FileCopyrightText: 2017 Scania CV AB
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
 # File: server.py
 # Date: 2017-09-18
 # Version:

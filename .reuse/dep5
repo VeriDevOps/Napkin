@@ -1,0 +1,26 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Saga
+Upstream-Contact: Scania Open Source Program <ossforum@scania.com>
+Source: https://github.com/scania/saga
+
+Files: *
+Copyright: 2017-2020 Scania CV AB
+License: GPL-3.0-or-later
+
+Files: client/js/ace/* client/ace-src/*
+Copyright: 2010 Ajax.org B.V.
+License: BSD-3-Clause
+
+Files: client/assets/dygraph*
+Copyright: 2017 Dan Vanderkam (danvdk@gmail.com)
+License: MIT
+
+Files: client/assets/ohm.min.js
+Copyright: 2014-2016 Alessandro Warth and the Ohm project contributors
+License: MIT
+
+Files: client/js/brace/*
+Copyright: 2013 Thorsten Lorenz.
+License: MIT
+
+
