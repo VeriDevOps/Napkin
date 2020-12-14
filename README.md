@@ -148,3 +148,13 @@ index.html should contain the following:
   </body>
 </html v>
 ```
+
+# License and other information
+This project as a whole is licensed by Scania CV AB under the GNU General
+Public License version 3.0 or any later version. For the avoidance of doubt,
+Scania CV AB holds the patent
+SE540377 *Methodology for testing using interactively changed traces* which
+is related to this project. Should this patent be seen as covering whole or
+parts of this project, this patent is explicitly considered part of the
+*essential patent claims* as per the license.
+
