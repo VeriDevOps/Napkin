@@ -1,18 +1,20 @@
 //import bus from './EventBus.vue';
-import * as operators from './Operators.js';
+const operators = require( './Operators.js')
+//import * as operators from './Operators.js';
 
-export const PLOT_TYPE = Object.freeze({
+const PLOT_TYPE = Object.freeze({
   "GUARD": 0,
   "ASSERTION": 1
 });
 
-export function isIn(s, arr){
+function isIn(s, arr){
   for(let i = 0 ; i < arr.length;i++){
     if (s === arr[i]) return true;
   }
   return false;
 }
-export function isNumber(value) {
+exports.isIn = isIn;
+function isNumber(value) {
     if ((undefined === value) || (null === value)) {
         return false;
     }
@@ -21,9 +23,10 @@ export function isNumber(value) {
     }
     return !isNaN(value - 0);
 }
+exports.isNumber = isNumber;
 
 
-export function areIntervals(times) {
+function areIntervals(times) {
   // if (!Array.isArray(times))
   //   throw "InvalidArgumentException: Util.areIntervals()"
   // return times.length > 0 && Array.isArray(times[0]);
@@ -31,23 +34,24 @@ export function areIntervals(times) {
          times.length > 0 &&
          Array.isArray(times[0]);
 }
-
-export function areEvents(times) {
+exports.areIntervals = areIntervals;
+function areEvents(times) {
   // TODO empty times should also be a valid event series (times = [] )
   // return !areIntervals(times) && times.length > 0;
   return Array.isArray(times) &&
          times.length > 0 &&
          !Array.isArray(times[0]);
 }
+exports.areEvents = areEvents;
 
-export function isNumeric(str) {
+function isNumeric(str) {
   return !(Number.isNaN(Number.parseFloat(str)));
 }
-
-export function isFunctionDefined(name) {
+exports.isNumeric = isNumeric;
+function isFunctionDefined(name) {
   return operators[name] !== undefined;
 }
-
+exports.isFunctionDefined = isFunctionDefined;
 /**
 * Get all short signal names ("pretty_print") and extract the actual signal name
 * (it is typically either the last substring in /x/y/z/signal (or x.y.z.signal)
@@ -56,6 +60,7 @@ export function isFunctionDefined(name) {
 * @param name Typically a signals (pretty_print) name
 * @return The short name of this signal.
 */
+/*
 export function getShortName(name) {
   var nameParts = name.split(/\/|\./);
   for (var i=0; i < nameParts.length; i++) {
@@ -65,3 +70,4 @@ export function getShortName(name) {
   }
   return nameParts.slice(-1)[0];
 }
+*/

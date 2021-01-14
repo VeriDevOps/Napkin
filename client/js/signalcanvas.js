@@ -1,6 +1,12 @@
 import bus from "./EventBus.vue"
-
+import * as EvalContext from './EvalContext.js';
 var guard_debug = false
+function _getXmax(){
+  return EvalContext.getInstance().xmax;
+}
+function _getXmin(){
+  return EvalContext.getInstance().xmin;
+}
 
 export class SignalCanvasBase{
 //<canvas id="C" width="200" height="500" style="width:300px; height:500px; border:1px solid black"></canvas>
@@ -32,12 +38,11 @@ resize(new_width,new_height){
   this.ctx.setTransform(pix_ratio, 0, 0, pix_ratio, 0, 0);
 
   this.height -= this.ypos;  // TODO, not sure about this one!
+//  console.log("signalcanvas.js::Resized to exactly: ",  this.canvas.width, this.canvas.height,this.canvas.style.width,this.canvas.style.height);
+
 }
-resize_to_parent_width(parent){
-  console.log("signalcanvas.js::resizing")
-  if (parent==undefined)
-    var parent = this.canvas.parentElement;
-  var new_width = parent.offsetWidth;
+resize_to_parent_width(){
+  var new_width = this.canvas.parentElement.offsetWidth;
   var new_height = this.height;
   this.resize(new_width, new_height);
 }
@@ -193,15 +198,13 @@ constructor(elementName){
 // ------------------------------------------------------------
 // range - calculate range of array
 // Given the arrain arr, [min,max] is returned.
-// If gain != o, the reange is stretched out
+// If gain != o, the range is stretched out
 // gain percentage of the whole range original (max-min)
 range(arr,gain){
-  var min =  100000;
-  var max = -100000;
-   for(var i = 0; i < arr.length; i++){
-      min = (min > arr[i] ? arr[i] : min);
-      max = (max < arr[i] ? arr[i] : max);
-   }// end for
+
+  var min =  Math.min(...arr);
+  var max =  Math.max(...arr);
+ // console.log("----------------------------------------signalcanvas.js new autorange is min,max ",min,max);
    var expansion = Math.abs(max-min) * gain / 100;
    if(Math.abs(max-min) < 1){
      expansion = 1;
@@ -319,11 +322,13 @@ updateAutoTicks(){
  }//updateAutoTicks
  // ------------------------------------------------------------
   resetZoom(){
-    if( this.autorange == undefined) return;
-
+    if( this.autorange == undefined) {
+      console.log("signalcanvas.js::resetZoom this.autorange == undefined" );
+      return;
+    }
     this.zoom.ylim = this.range(this.y, this.autorange.ygain)
 
-    this.zoom.xlim = [bus.getXmin(),bus.getXmax()];
+    this.zoom.xlim = [_getXmin(),_getXmax()];
     this.updateAutoTicks();
     this.clear();
     this.draw();
@@ -586,10 +591,12 @@ draw_mouse(){
 
     }
 
+    try{  // TODO, sometiemes we loose this.y[this.mouse.old_t].toFixed
     this.ctx.fillText("x: " + this.mouse.x.toFixed(2), this.width-100, 30);
     if(this.mouse.old_t !== undefined) {
         this.ctx.fillText("y: " + this.y[this.mouse.old_t].toFixed(2), this.width-100, 50);
     }
+  } catch(e){}
     this.ctx.stroke();
     this.ctx.restore();
 }
@@ -738,13 +745,14 @@ draw_ga_info_interval(){
   }
   var ctx = this.ctx;
   var guards = this.ga.current_evaluation.times.valid;
+
   var fails  = this.ga.current_evaluation.times.fail.slice(0);
   var passes = this.ga.current_evaluation.times.pass.slice(0);
 
   if(guards){
     var len = guards.length
     for (var i = 0; i < len; i++){
-        this._draw_region(guards[i][0], guards[i][1], this.ga.guardcolor);
+        this._draw_region(Math.max( _getXmin(),guards[i][0]), Math.min( _getXmax(),guards[i][1]), this.ga.guardcolor);
           if(guard_debug)console.log("Guard region between ", guards[i][0], guards[i][1]," seconds")
 
     }
@@ -755,14 +763,14 @@ draw_ga_info_interval(){
   if(fails){
     var len = fails.length
     for (var i = 0; i < len; i++){
-        this._draw_region(fails[i][0], fails[i][1], this.ga.failcolor_int);
+        this._draw_region(Math.max( _getXmin(),fails[i][0]), Math.min( _getXmax(), fails[i][1]), this.ga.failcolor_int);
         if(guard_debug)console.log("Fail region between ",fails[i][0], fails[i][1]);
     }
   }  //fails
    if(passes){
      var len = passes.length
      for(var i  = 0; i < len; i++){
-        this._draw_region(passes[i][0], passes[i][1], this.ga.passcolor_int);
+        this._draw_region(Math.max( _getXmin(),passes[i][0]), Math.min( _getXmax(), passes[i][1]), this.ga.passcolor_int);
         if(guard_debug)console.log("Pass region between ",passes[i][0], passes[i][1]);
      }
    } //passes
@@ -1249,7 +1257,7 @@ _cancel_drag(){
                                     newX < this.x[Math.min(this.draginfo.validsampletargetix + 1,this.x.length - 1)];
         var endpoints = this.draginfo.validsampletargetix == 0 ||
                         (this.draginfo.validsampletargetix == this.x.length -1 &&
-                         newX <   bus.getXmax());
+                         newX <   _getXmax());
         //console.log(within_nearest_points , endpoints, "Dragging point " + this.draginfo.validsampletargetix + " " + this.x.length)
 
         if (within_nearest_points || endpoints){
@@ -1344,6 +1352,7 @@ _cancel_drag(){
     this.draginfo.active_drag = false;
     this.clear();
     this.draw();
+    bus.$emit('edited-signal-updated',this.name);
     return false;
 
   }//onMouseUp

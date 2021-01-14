@@ -8,19 +8,19 @@ var TearsHighlightRules = function() {
 
     var keywordMapper = this.createKeywordMapper({
         "keyword.control":
-            "where when while shall if then " +
-            "within for after " +
-            "def do",
+            "when while shall " +
+            "within for def alias const",
         "constant.language":
-            "true false inf defined",
+            "true false inf ",
         "keyword.operator":
-            "and or",
+            "and or ->",
         "support.function":
         	// "abs dydt diff " +
         	// "pwmfreq pwmduty " +
-        	"edge falling_edge rising_edge derivate apply_bit_mask " +
+          "store timepoint value as sequence " +
+        	" at falling_edge rising_edge derivative count cycle bitmask " +
         	// "even odd " +
-        	"complement between sequence" // newinterval"
+        	"not between" // newinterval"
     }, "text", true, " ");
 
     this.$rules = {

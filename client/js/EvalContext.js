@@ -1,3 +1,6 @@
+
+const FileFormats = require('./FileFormats.js')
+//import * as FileFormats from './FileFormats.js';
 /******************************************************************************
 * The EvalContext class maintains a list of signals, loaded from a jsondiff structure.
 * It also maintains the list of consts and aliases for practical reasons.
@@ -26,7 +29,8 @@
 *
 *****************************************************************************/
 var magic_global_intance_of_eval_context = undefined;
-export function getInstance(){
+
+ function getInstance(){
 // We need to check this but I assume "this" refer to the function scope
 // that scope will be the same each time we call the function (magically)
 if (magic_global_intance_of_eval_context == undefined){
@@ -35,51 +39,64 @@ if (magic_global_intance_of_eval_context == undefined){
 return magic_global_intance_of_eval_context;
 }
 
-export function joinTimelines(tLine1, tLine2) {
 
-  let evalContext = getInstance();
-  let timeline = tLine1.concat(tLine2);
-  timeline.sort(function(a, b) {
-    return a - b;
-  });
-    if (timeline.length > 0) {
-        if (timeline[0] > evalContext.getXmin())
-            timeline.splice(0, 0, evalContext.getXmin());
-        if (timeline.slice(-1)[0] < evalContext.getXmax())
-            timeline.push(evalContext.getXmax());
+/****************************************************************************
+ * Mass evaluation functions, use with care, typically in back-end applications,
+ * Switching context when eveluating many log-files during,e.g tuning takes
+ * 96-98% of the evaluation time. 
+ */
+var savedInstances = {}
+
+function setInstance(name){
+    var ctx = savedInstances[name]
+    if(typeof(ctx)==='undefined'){
+        magic_global_intance_of_eval_context  = new EvalContext();
+        savedInstances[name] = magic_global_intance_of_eval_context;
+        return false;
+    }else{
+        magic_global_intance_of_eval_context = ctx;
+        return true;
     }
-  // Remove duplicates
-  for (var i = 1; i < timeline.length; i++)
-  {
-    if (timeline[i-1] === timeline[i]) {
-      timeline.splice(i, 1);
-    }
-  }
-  return timeline;
+}//setInstance
+function hasInstance(name){
+    var ctx = savedInstances[name]
+    return typeof(ctx) !== 'undefined';
 }
+function saveInstance(name){
+    savedInstances[name] = magic_global_intance_of_eval_context;
+}
+exports.getInstance = getInstance;
+exports.setInstance = setInstance;
+exports.hasInstance = hasInstance;
+/***************************************************************************** */
 /************************************************************
 *
 *
 */
-export class EvalContext{
+class EvalContext{
 
-  _clearContext(){
+  clearContext(alsoClearGlobalDefinitions){
     let self = this;
+
+    if(typeof alsoClearGlobalDefinitions !== 'undefined' && alsoClearGlobalDefinitions == true){
+    self.defaultDefinitionBlock={              // This is an optional set of global definitions that may be applied before each evaluation.
+          content:"",                          // This T-EARS expression is evaluated before each G/A.
+          fileName: "No definitions Loaded",   // The filename of the loaded main definitions file.
+          active:false,                       // Tears parser reads this flag to include or not include this block..
+          constDefAlias:undefined
+    };
+    }
+    self.nrLoadedLogs = 0;
     self.magic_nr = Math.floor(Math.random()*1000);
     // Main data structure, shared between PlotEditor and other instances for peformance reasons.
-    self.signals            = undefined;
+    self.signals            = [];
     self.timestamps         = [];
     // Redundant "cache "
-    self.shortNames         =  {};  // this is a cached list of valid short names
-    self.shortNameBlacklist =  {};  // If we cannot create a unique shortname, the signal is black listed.
+    self.shortNames         =  new Set();  // this is a cached list of valid short names
+    self.shortNameBlacklist =  new Set();  // If we cannot create a unique shortname, the signal is black listed.
 
-    self.aliases = undefined;      // Re-populated by Tears.js whenever evaluating an expression
-    self.consts  = undefined;      // Re-populated by Tears.js whenever evaluating an expression
-    self.xmax = - Number.MAX_VALUE;
-    self.xmin =   Number.MAX_VALUE;
-    // These signals are usded for + and - inf
-    self.infEventSignal = {shortName:"inf",
-                            xAxis:[Number.MAX_VALUE]};
+    self.xmax = 200; //- Number.MAX_VALUE;
+    self.xmin = 0;  //  Number.MAX_VALUE;
   }
   /****************************************************************************
   * CTOR
@@ -91,7 +108,8 @@ export class EvalContext{
 
   constructor(jsondiff){
    let self = this;
-   self._clearContext();
+   self.clearContext(true);
+   // TODO: Somehow connect / move this functionality with/to the file format class...
    // getShortName has a default function, but can be changed to reflect the current log policy
    // i.e depending on company or department.
    self.getShortName = function(name) {
@@ -102,14 +120,93 @@ export class EvalContext{
          }
        }
        return nameParts.slice(-1)[0];
-     }; //
-  if (jsondiff != undefined){this.setSignalsFromSagaJSONDIFF(jsondiff)}
+     };
+  if (jsondiff != undefined){
+    var ff = new FileFormats.JSONDIFF();
+    this.mergeSignals(ff.load(jsondiff,false))
+  }
   }
   /****************************************************************************
   */
   isValid(){
     return this.signals != undefined;
   }
+  /****************************************************************************
+  * defaultDefinitionBlock
+  * The default definition block is a T-EARS snippet that is evaluated
+  * before the actual G/A (typically) entered in the editor.
+  * If there are any errrors in the block, an error message is thrown.
+  ****************************************************************************/
+  setDefaultDefinitionBlock(config){
+    this.defaultDefinitionBlock = config;
+    //console.log("EvalContext.js::set global definitions")
+    //console.table("Global definitions: ",config);
+    //console.trace();
+  }
+  getDefaultDefinitionBlock()
+  {
+    return this.defaultDefinitionBlock;
+  }
+  // Builds the current list of completions from the global definition block.
+  // TODO: also add local definitions AND remove these from the auto local list.
+  getConstDefAliasCompletions(){
+  //  console.log("EvalContext.js::getConstDefAliasCompletions")
+    if (false == this.defaultDefinitionBlock.active) return [];
+    if (undefined == this.defaultDefinitionBlock.constDefAlias) return [];
+    let completions = []
+    this.defaultDefinitionBlock.constDefAlias.forEach(def => {
+          if(def.scope != undefined && def.scope === "global"){
+              completions.push({
+                caption: def.identifier + " = ("  +
+                         def.type.replace("identifier","alias") + ") " +
+                         def.value.sourceString.substring(0,80).replace("\n"," "),
+                value: def.identifier,
+                meta: def.deftype.replace("def","define") + " global"
+              })
+        }
+    });
+    //console.table(completions)
+    return completions;
+ }
+ getMainDefEval(){
+  //  console.log("EvalContext.js::getMainDevEvals")
+    if (false == this.defaultDefinitionBlock.active) return [];
+    if (undefined == this.defaultDefinitionBlock.constDefAlias) return [];
+
+    //console.table(completions)
+    return this.defaultDefinitionBlock.constDefAlias;
+ }
+ getMatches_ChangeWithinTimeSpan(starttime,endtime){
+   // TODO use half search
+   // Loop through all signals and add those where somehing happens
+   let res = [];
+   this.signals.forEach(signal => {
+
+     // Check if there is any timestamps
+     let i = 0;
+     let nrSamples  = 0;
+     let end = signal.xAxis.length;
+     while (i < end && signal.xAxis[i] < starttime){
+       i++; // TODO rework from slow linear wind to match region.
+     }
+     if (i < end && signal.xAxis[i] < endtime){
+      // console.log("EvalContext.js::getMatches_ChangeWithinTimeSpan found match:", signal.name)
+        nrSamples ++;
+         while (i < end && signal.xAxis[i] < endtime){
+            i++;
+            nrSamples ++;
+         }
+        signal.matchingSamples = nrSamples;
+        res.push(signal)
+      }
+   });
+  // if res.length == 0 return res;
+  // return a list with the ones with most changes at the top.
+  res.sort(function(a, b) {
+                      return a.matchingSamples < b.matchingSamples;
+                    });
+   return res;
+ }
   /****************************************************************************
   * dumpToConsole
   * Dumps the internal data structure in a readable way
@@ -137,10 +234,7 @@ export class EvalContext{
    console.groupEnd();
 
  }//dump
- resetConstsAndAliases(){
-   self.aliases = undefined;      // Re-populated by Tears.js whenever evaluating an expression
-   self.consts  = undefined;      // Re-populated by Tears.js whenever evaluating an expression
- }
+
   /****************************************************************************
   * exposeInternalSignalStructure
   * WE cannot stress the fact enough that the signals structure is shared memory
@@ -150,61 +244,44 @@ export class EvalContext{
   getExposedInternalSignalStructure(){
     return this.signals;
   }
-
+/****************************************************************************
+* getSignals - returns a list of signals matching signal.name == name
+*              Since we can load several files, we may want to compare the
+*              same signal from different log files. This function returns
+*              all such matches
+*/
+ getSignals(name){
+   var self = this;
+   var res = [];
+   if (self.signals === undefined || self.signals == null) {
+       console.log("EvalContext.js::getSignals Warning this.signals is null!")
+       return res;
+   }
+   for (let i = 0; i < self.signals.length; i++) {
+       var cs = self.signals[i];
+       if (name === cs.name){
+           res.push(self.signals[i]);
+       }
+   }
+   return res;
+ }
   // TODO, returning undefined is correct javascript, we should refactor
   // code to use getSignal instead of the wide search. Always use wide search,
-  // since shortName is guaranteed to be unique.
+  // since shortName is not guaranteed to be unique.
   // This version of getSignal is used by the expression evaluation.
   getSignal(shortName) {
-    // Due to some error in the grammar, we will get a def with a number!
-    if (typeof shortName == 'number'){
-      //console.log("EvalContext.js::getSignal Warning shortName is a number!");
-      return shortName;
-    }
 
-    if (shortName == undefined){
+    if (typeof shortName === 'undefined'){
 
        console.log("EvalContext.js::getSignal Warning shortName is undefined. Macic nr is", this.magic_nr);
        //console.trace();
        return undefined;
     }
-      if (shortName.toLowerCase() === "inf") {
-      /*    console.log("EvalContext.js::getSignal Warning Expression is USING INF!!!!!",self.infEventSignal)
-          // TODO:  inf or logstart, logend should be an event "signal" that only contains that point in time
-          //        However, I do not know how this eventually ends up in e.g in between.
-          return {shortName:"inf",
-                  xAxis:[Number.MAX_VALUE]};
-      }else if (shortName.toLowerCase() === "neginf") {
-          console.log("EvalContext.js::getSignal Warning Expression is USING NEGINF!!!!!",self.infEventSignal)
-          // TODO:  inf or logstart, logend should be an event "signal" that only contains that point in time
-          //        However, I do not know how this eventually ends up in e.g in between.
-          return {shortName:"neginf",
-                  xAxis:[-Number.MAX_VALUE]};
-      */ return undefined;
-      }
 
       var sig = this.getSignalDataWideSearch(shortName); //this.nameSignalMap[shortName];
       return (sig == null) ? undefined : sig;
   }
-  isSignal(signalName){
-    var self = this;
-    // This function is required to separate real signals from def,alias and const
-    // Normal search
-    for (let i = 0; i < self.signals.length; i++) {
-        var cs = self.signals[i];
-        if (signalName === cs.shortName ||
-            signalName === cs.name ||
-            signalName === cs.newName) {
-            return true;
-        }
-    }
-    return false;
-  }
 
-  //TODO remove this or make it right.
-  hasSignal(shortName) {
-                return this.getSignalDataWideSearch(shortName) != null;
-  }
   // TODO: make sure calling functions handle undefined instead of null!
   // TODO: then remove
   getSignalDataWideSearch(signalName) {
@@ -215,6 +292,11 @@ export class EvalContext{
           console.log("EvalContext.js::getSignalDataWideSearch Warning this.signals is null!")
           return null;
       }
+      /// DEBUG we needed to know which signals the expression tried to use. TODO: this may be a useful function to have!
+      // An ugly variant would be to replace this method temporarily :) 
+      //console.log("EvalContext.js::getSignalDataWideSearch ",signalName)
+      //return self.signals[0]
+
 
       if (self.shortNameBlacklist.has(signalName)) {
           console.log("EvalContext.js::getSignalDataWideSearch trying to use blacklisted short name  (ambigous). Request rejected: " + signalName)
@@ -229,40 +311,12 @@ export class EvalContext{
               return self.signals[i];
           }
       }
-
-      // If not normal signal, it may be a const OR an alias
-      if (self.consts !== undefined) {
-          for (let i = 0; i < self.consts.length; i++) {
-              var _const = self.consts[i];
-              //console.log("EvalContext.js::getSignalDataWideSearch() checking const ", _const);
-              if (_const.name === signalName)
-                  return {
-                      shortName: signalName,
-                      isConst: true,
-                      name: signalName,
-                      newName: signalName,
-                      xAxis: [self.getXmin(), self.getXmax()],
-                      values: [_const.float, _const.float]
-
-                  };
-          }
-      }
-      if (self.aliases !== undefined ) {
-
-          for (let i = 0; i < self.aliases.length; i++) {
-              var alias = self.aliases[i];
-              if (alias.name  === signalName) {
-                  // ok, we are requesting an alias. Go and get the real signal
-                  //console.log(" EvalContext.js::getSignalDataWideSearch found matching alias " + alias.alias.alias);
-                  return self.getSignalDataWideSearch(alias.alias.alias);
-              }
-          }
-      }
       return null;
   }//getSignalDataWideSearch
+
   getAllSignalNames() {
     let self = this;
-      //console.log("Log.js::getAllSignalNames() called ");
+      console.log("EvalContext.js::getAllSignalNames() called ");
       // Creates a list of all signal names that should appear in
       // the completion list of the GA Editor each time you press ctrl space.
       //var completionList = Object.keys(seld.nameSignalMap);
@@ -273,17 +327,10 @@ export class EvalContext{
 
       for (let i = 0; i < self.signals.length; i++) {
           var cs = self.signals[i];
+          if(self.nrLoadedLogs == 1)
+          completionList.push(cs.name)
+          else
           completionList.push(cs.newName)
-      }
-      if (self.consts !== undefined) {
-          for (let i = 0; i < self.consts.length; i++) {
-              completionList.push(self.consts[i].name);
-          }
-      }
-      if (self.aliases !== undefined) {
-          for (let i = 0; i < self.aliases.length; i++) {
-              completionList.push(self.aliases[i].name);
-          }
       }
 
       // Make sure to delete all duplicates.
@@ -296,13 +343,6 @@ export class EvalContext{
   getXmax() {
       return this.xmax;
   }
-  setConsts(consts) {
-      this.consts = consts;
-  }
-  setAliases(aliases) {
-      this.aliases = aliases;
-  }
-
   /**************************************************************************
   * signalIterator() - iterate through all available signals.
   *
@@ -327,7 +367,7 @@ forceUnitTestMinMax(min,max){
 }
 // TO avoid spilling context over to other test cases, we may need a forced reset of the context.
 forceUnitTestClearContext(){
-  this._clearContext();
+  this.clearContext();
 }
 forceUnitTestSetTimeStamps(ts){
   this.timestamps = ts;
@@ -349,30 +389,96 @@ forceUnitTestSignals(signals){
 */
 }
   /****************************************************************************
-  * setSignals
+  * mergeSignals -- Main way of loading signals into the Evaluation Context.
+  * It is capable of rebasing old and new signals so they appear on the same
+  * timeline, but starts at zero seconds. There is also a comparison rebase
+  * where we "rewind" all signals(0 = startTime).
+  * rebase : true - the earliest log starts with zero and the next one is
+  *                 adjusted to start relative to that.
+  * rebase :false - Compares two logs taken at different points in time. But
+  *                 logs are loaded to start at t=0 this problem is already solved.
+  *                  TODO: We may need to add a logfile skew or synch if 0 is not
+  *                 accurate enough.
   *****************************************************************************/
-setSignalsFromSagaJSONDIFF(jsondiff){
-    let self = this;
-    let signals = self._createSignalDataFromJSON(jsondiff);
-    self._setSignals(signals);
-}
+ mergeSignals(signals,rebase = true){
+   if(signals.length ==0) return; // TODO add more error handling.
+   var self = this;
+   self.nrLoadedLogs++;
+   // If we have no signals, just set the signals
+   if (self.signals.length == 0){
+     //console.log("EvalContext.js:mergeSignals::No previous signals, doing as before")
+       self._setSignals(signals);
+       return;
+   }
+   // If rebase is false, we can just add the new signals to the old ones
+   // since logfiles are always starting at 0 seconds relative time.
+   if(rebase == false){
+     signals.forEach(s => {
+       s.shortName = self.getShortName(s.name);
+       self.signals.push(s)
+     })
+     self.updateShortNames();
+     self.updateRange();
+     return; // No furthere processing necessary
+   }
+   // Otherwise we need to rebase the signals and load them
+   // The caller should know that the current signals carries the timeBase property.
+ var ff = new FileFormats.FileFormat();
+ var oldSignals = self.signals;
+ self.signals = [];
+ if(signals[0].timeBase > oldSignals[0].timeBase){
+   oldSignals.forEach(s => {
+     self.signals.push(s)
+   })
+   signals.forEach(s => {
+     s = ff.rebaseSignal(s,oldSignals[0].timeBase);
+     self.signals.push(s)
+   })
+
+}else { // New signals timebase is smaller use that one.
+  oldSignals.forEach(s => {
+    s = ff.rebaseSignal(s,oldSignals[0].timeBase);
+    self.signals.push(s)
+  })
+  signals.forEach(s => {
+
+    self.signals.push(s)
+  })
+}//else
+// TODO: SHOULD WE SORT THE SIGNALS ? Should be done in the SignalList ??
+self.signals.forEach(s =>{
+  s.shortName = self.getShortName(s.name);
+});
+self.updateShortNames();
+self.updateRange();
+}//merge
+
   /****************************************************************************
   * setSignals  - Use new signal structure 'signals' and update short names
   * of the signals.
   */
   _setSignals(signals){
     let self = this;
-    self.aliases = undefined;      // Re-populated by Tears.js whenever evaluating an expression
-    self.consts  = undefined;      // Re-populated by Tears.js whenever evaluating an expression
     self.signals = signals;
+    self.signals.forEach(s =>{
+      s.shortName = self.getShortName(s.name);
+    });
     self.updateShortNames();
     self.updateRange();
+    self.nrLoadedLogs = 1;
   }//setSignals
+  /****************************************************************************
+  * createNewSignal
+  *
+  *
+  *****************************************************************************/
   createNewSignal(newSignal){
-    console.log("EvalContext.js::creating new signal ", JSON.stringify(newSignal));
+    //console.log("EvalContext.js::creating new signal ", JSON.stringify(newSignal));
     let self = this;
     let sigEntry = newSignal
-    sigEntry.name       = sigEntry.newName;
+    if (sigEntry.newName === undefined){
+      sigEntry.name = sigEntry.newName;
+    }
     sigEntry.shortName  = self.getShortName(sigEntry.newName); // NOTE, we can only shorten uniqe namnes ( add * if not in OnSignalListUpdated )
     sigEntry.timestamps = self.timestamps;       // All signals get the same timestamps
     if(self.signals == undefined)
@@ -380,8 +486,10 @@ setSignalsFromSagaJSONDIFF(jsondiff){
     self.signals.push(sigEntry);
     self.updateShortNames();
     self.updateRange();
+  //  this.dumpToConsole(); // DEBUG
     return  sigEntry;
   }
+
   /**************************************************************************
   * This is where we have finalized the SAGA JSONDIFF format.
   *{
@@ -402,9 +510,10 @@ setSignalsFromSagaJSONDIFF(jsondiff){
   * NOTE: Usually, this function is EvalContext INTERNAL,
   * in most cases, you want to use setSignalsFromSagaJSONDIFF instead.
   **************************************************************************/
-
+/*
   _createSignalDataFromJSON(jsondiff) {
         let self = this;
+
         var signals = [];
         self.timestamps = [];  // TODO, if we want to load several files we need to scope this one.
 
@@ -440,7 +549,7 @@ setSignalsFromSagaJSONDIFF(jsondiff){
         }
         return signals;
 }
-
+*/
 /******************************************************************************
 *  updateShortNames
 *       For backward compatibility and easier completion, we create a
@@ -489,7 +598,7 @@ updateShortNames(){
 /*******************************************************************************
  getXRange() - returns min and max for the given signal (X values).
 ********************************************************************************/
-static getXRange(signal){
+getXRange(signal){
   let xAxis = signal.xAxis;
   if (!Array.isArray(xAxis)) {
       xAxis = [xAxis];
@@ -500,14 +609,15 @@ static getXRange(signal){
 }
 /*******************************************************************************
  updateRange() - updates xMin and xMax for the current signal structure.
-********************************************************************************/updateRange() {
+********************************************************************************/
+updateRange() {
       let self = this;
         //console.log("EvalContext.js::updateRange);
 
       self.xmin = Number.MAX_VALUE;
       self.xmax = Number.MIN_VALUE;
       for (let i = 0 ; i < self.signals.length;i++){
-          let range = EvalContext.getXRange(self.signals[i]);
+          let range = self.getXRange(self.signals[i]);
           if (range.min < self.xmin) {
               self.xmin = range.min;
           }
@@ -516,8 +626,38 @@ static getXRange(signal){
           }
      }//for
   }
+/**
+*   Projects signal values on the applicable part of the timeline
+*   and  Number.NaN on the non applicable parts (to avoid drawing there)
+*   The common timeline contains more points than the original so we
+*   interpolate there,
+*
+* @param signal (xAxis,values)
+* @param timeline xAxis, potentially wider and with higher sampling rate.
+* @returns values for timeline, where y(t) = signal.values(t) for t in signal.xAxis
+*                               and y(t) = Number.NaN for t not in signal.xAxis
+* (note that t is not meant as index in the example)
+************************************************************************/
+projectSignalOnTimeline(signal, timeline){
 
-
+    // Truncate common timeline for signal.
+    var localTimeLine = [];
+    var before  = [];
+    var after = [];
+    timeline.forEach(t =>{
+      var first = signal.xAxis[0];
+      var last = signal.xAxis[signal.xAxis.length - 1];
+      if ( (t >= first) &&
+           (t <= last))
+           localTimeLine.push(t);
+      if(t < first) before.push(Number.NaN);
+      if(t > last)  after.push(Number.NaN);
+    }) //forEach
+    var result = before;
+    result = result.concat(this.interpolateDataToTimeline(signal, localTimeLine));
+    result = result.concat(after);
+    return result;
+  }
   /**
    * Interpolates a signals data values to a given xAxis (timeline).
    *
@@ -531,16 +671,44 @@ static getXRange(signal){
    *
    * @return interpolated values (suitable for storage in e.g. data.values)
    */
-  interpolateDataToTimeline(data, timeline) {
+
+   /************************************************************
+   * joinTimelines - Merges two timelines into one (P1 or P2)
+   * It also stretches the results at getXmin and getXmax
+   * NOTE that this should only be used for visualization!
+   */
+   joinTimelines(tLine1, tLine2) {
+
+     let evalContext = getInstance();
+     let timeline = tLine1.concat(tLine2);
+     timeline.sort(function(a, b) {
+       return a - b;
+     });
+       if (timeline.length > 0) {
+           if (timeline[0] > evalContext.getXmin())
+               timeline.splice(0, 0, evalContext.getXmin());
+           if (timeline.slice(-1)[0] < evalContext.getXmax())
+               timeline.push(evalContext.getXmax());
+       }
+     // Remove duplicates
+     for (var i = 1; i < timeline.length; i++)
+     {
+       if (timeline[i-1] === timeline[i]) {
+         timeline.splice(i, 1);
+       }
+     }
+     return timeline;
+   }
+interpolateDataToTimeline(data, timeline) {
     var lastMatchIndex = 0;
     var interpolatedValues = [];
     var time = data.xAxis;
     var values = data.values;
-    if (!Array.isArray(time))
+  /*  if (!Array.isArray(time))   // We should only deal with signals here.
       time = [time];
     if (!Array.isArray(values))
       values = [values];
-
+*/
     var i=0;
     while (timeline[i] < time[0]) {
       interpolatedValues.push(values[0]);

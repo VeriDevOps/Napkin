@@ -2,6 +2,7 @@
     import Vue from 'vue'
     import * as Util from './Util.js';
     import * as EvalContext from './EvalContext.js';
+    import FileFormats from  './FileFormats.js';
     var time;
 
     const bus = new Vue({
@@ -9,74 +10,31 @@
         data() {
             return {
                 socket: {},
+                serverListening:false,
+                listeners:{},
+                logfile_parts : "" // Used for loading large log files in chunks to not crasch firefox....
             }
         },
-        //TODO: Refactor - the utility methods should probably by in some other module
-        /**************************************************************************/
-        /* Common utility methods 												  */
-        /**************************************************************************/
         methods: {
-
-            //TODO remove....
-            getShortName(signal) {
-                return Util.getShortName(signal.name);
-            },
-            // This version of getSignal is used by the expression evaluation.
-
-            getSignal(shortName) {
-              EvalContext.getInstance().getSignal(shortName);
-            },
-
-            getSignalDataWideSearch(signalName) {
-
-              return  EvalContext.getInstance().getSignalDataWideSearch(signalName);
-            },
-            getAllSignalNames() {
-               return EvalContext.getInstance().getAllSignalNames();
-            },
-            getXmin() {
-                //console.log("Eventbus::getXmin", EvalContext.getInstance().magic_nr);
-
-                return EvalContext.getInstance().xmin;
-            },
-            getXmax() {
-                return EvalContext.getInstance().xmax;
-            },
-            addConsts(consts) {
-                EvalContext.getInstance().setConsts(consts);
-            },
-            addAliases(aliases) {
-                EvalContext.getInstance().setAliases(aliases);
-            },
-            getEvalContext(){
-               return EvalContext.getInstance();
+            addListener(eventType, f){
+                var self = this;
+                self.listeners[eventType] = f;
             },
             on_bus_jsondiff(jsondiff){
               let self = this;
-
-              //console.log("EventBus.vue::on_bus_jsondiff populating EvalContext object.",JSON.stringify(EvalContext.getInstance()));
-
-              EvalContext.getInstance().setSignalsFromSagaJSONDIFF(jsondiff);
-              //EvalContext.getInstance().dumpToConsole();
-              //console.log("EventBus.vue:: emitting: 'new-eval-context-avaliable' ");
-              //console.table(EvalContext.getInstance().getExposedInternalSignalStructure());
-
+              var ff = new FileFormats.JSONDIFF();
+              // Server files always clearContext
+              var signals = ff.load(jsondiff,"",false);
+              EvalContext.getInstance().clearContext();
+              EvalContext.getInstance().mergeSignals(signals,false);
               self.$emit('new-eval-context-avaliable', EvalContext.getInstance().getExposedInternalSignalStructure());
-
-              self.$emit('clear-plots');
             },
 
         },
         created() {
             var self = this;
-
-            //self.evalContext = new EvalContext.EvalContext();
-
-            //self.evalContext = EvalContext.getInstance();
-
             self.socket = new WebSocket("ws://" + window.location.hostname + ":4001");
             self.socket.binaryType = "arraybuffer";
-
             self.socket.onopen = function(e) {
                 console.log("The socket is open");
 
@@ -84,25 +42,29 @@
                 self.socket.send(JSON.stringify({
                     type: 'check-roundtrip'
                 }));
-
+                self.serverListening = true;
                 self.$emit('socket-open');
             };
 
             // Whenever the FileBrowser has loaded and converted a new Log-File:
+
             self.$on('jsondiff-loaded', self.on_bus_jsondiff);
 
 
             self.socket.onclose = function(c) {
                 console.log("The socket has closed");
+                self.serverListening = false;
             };
 
             self.socket.onmessage = function(e) {
+                //console.log("EventBus::onSocketMessage ", e)
                 if (typeof e.data === "string") {
                     var jsonResponse = JSON.parse(e.data);
 
                     if (jsonResponse.hasOwnProperty("type")) {
                         if (jsonResponse["type"] === "file" &&
                             jsonResponse.hasOwnProperty("data")) {
+
                             self.$emit('jsondiff-loaded', jsonResponse["data"]);
                         } else if (jsonResponse["type"] === "save-resp") {
                             self.$emit('save-resp', jsonResponse["message"]);
@@ -111,6 +73,46 @@
                             console.log("Round-trip time: " + time + " ms");
                         } else if (jsonResponse["type"] === "invalid-config") {
                             self.$emit('invalid-config', jsonResponse["value"]);
+                        
+                        } else if (jsonResponse["type"] === "ga-text") {
+                            self.$emit('edit-text', "",'tears-editor-horizontal',true,false);
+                            self.$emit('edit-text', jsonResponse["data"],'tears-editor-vertical',true,false);
+                        } else if (jsonResponse["type"] === "bt-log-part") {
+                            self.logfile_parts += jsonResponse["data"];
+                            // TODO assert that each part refers to the same file being transferred
+                         } else if (jsonResponse["type"] === "bt-log-complete") {
+                             let fformatid = jsonResponse["formatid"]
+                             if (fformatid == undefined)
+                                        fformatid = 1
+                             let fname = jsonResponse["filename"]
+                             console.log("Loading ",fname," as format nr",fformatid)
+                             let formatter = FileFormats.getFormat(fformatid);  
+                              
+                             var signals = formatter.load( self.logfile_parts, fname, true);
+                             self.logfile_parts = ""
+                             //console.log("Got signals")
+                             
+                             EvalContext.getInstance().forceUnitTestSignals(signals);;
+                             EvalContext.getInstance().updateShortNames();
+                             EvalContext.getInstance().updateRange();
+                             //console.table(signals);
+                             bus.$emit('new-eval-context-avaliable', EvalContext.getInstance().getExposedInternalSignalStructure());
+                         } else if (jsonResponse["type"] === "ga-main") {
+                                //console.log("Receiving some GA-Main-Data",jsonResponse["data"])
+                                let gaText = jsonResponse["data"];
+                                let fname  = jsonResponse["filename"]
+                                let defBlock =  {
+                                content:gaText,
+                                fileName: self.definitionFile,
+                                active:true
+                                }
+                                EvalContext.getInstance().setDefaultDefinitionBlock(defBlock);
+                         }
+                         
+                        // Non standard requests have to be registered before
+                        console.log("Eventbus::socket::onmessage Non standard reply from server")
+                        if (!undefined == self.listeners[jsonResponse["type"]]){
+                            self.listeners[jsonResponse["type"]](jsonResponse);
                         }
                     }
                 }

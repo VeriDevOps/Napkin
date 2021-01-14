@@ -10,7 +10,7 @@ class Expression {
         this.invalidityCause = [];
         this.linkTo(parent);
         this.evalContext = EvalContext.getInstance();
-        //this.exprType = "Expression";
+        this.exprType = "Expression";
     }
 
     evaluate() { throw "abstract function evaluate() not implemented"; }
@@ -162,6 +162,37 @@ class Expression {
 
         var timeValues = {
         };
+
+        for(let timingExpr of this.jsonExpr.timing) {
+            let scalingFactor = 1;
+            if(timingExpr.unit === 'ms') {
+                scalingFactor = 1e-3;
+            }
+            //console.log("Expressions.js::getTimeExpressionsInS:" + "Checking Timing expr " , this.jsonExpr.timing)
+            var texpr =  parseFloat(timingExpr.value)
+            if(isNaN(texpr)){
+              // if is a constant. get it via signals itf
+              texpr = this.evalContext.getSignal(timingExpr.value);
+              if(texpr == undefined ||  !texpr.hasOwnProperty("isConst")){
+                this.invalidityCause.push("Timing expr constant " + timingExpr.value + " not found.");
+                return {};
+              }
+              texpr = texpr.values[0]
+            }
+            timeValues[timingExpr.type] = texpr * scalingFactor;
+        }
+        //console.log("Expressions.js::getTimeExpressionsInS:",timeValues);
+        return timeValues;
+    }//getTimeExpressionsInS
+
+  /* Old impl without const support.
+    getTimeExpressionsInS() {
+        if(this.jsonExpr.timing === undefined)
+            return {
+            };
+
+        var timeValues = {
+        };
         for(let timingExpr of this.jsonExpr.timing) {
             let scalingFactor = 1;
             if(timingExpr.unit === 'ms') {
@@ -170,14 +201,17 @@ class Expression {
             timeValues[timingExpr.type] = parseFloat(timingExpr.value) * scalingFactor;
         }
         return timeValues;
-    }
-}
+    }*/
+
+
+
+}//class
 
 /******************************************************************************/
 export class RootExpression extends Expression {
     constructor(jsonExpr) {
         super(jsonExpr);
-        //this.exprType = "RootExpression";
+        this.exprType = "RootExpression";
         for([key, value] of Object.entries(this.jsonExpr)) {
             let expr = ExprFactory.create({ [key]: value}, this);
             this[key] = expr;
@@ -300,7 +334,7 @@ class DefinesExpression extends Expression {
     constructor(jsonExpr,parent) {
         super(jsonExpr,parent);
         this.createNameBodyMap();
-        //this.exprType = "DefinesExpression";
+        this.exprType = "DefinesExpression";
     }
 
     createNameBodyMap() {
@@ -348,7 +382,7 @@ class DefinesExpression extends Expression {
 class ConfigExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "ConfigExpression";
+        this.exprType = "ConfigExpression";
         ExprFactory.create(this.jsonExpr.config, this);
     }
 }
@@ -357,7 +391,7 @@ class ConfigExpression extends Expression {
 class ConstantsExpression extends Expression {
     constructor(jsonExpr,parent) {
         super(jsonExpr, parent);
-        //this.exprType = "ConstExpression";
+        this.exprType = "ConstExpression";
         this.createNameBodyMap();
     }
 
@@ -413,7 +447,7 @@ class ConstantsExpression extends Expression {
 class AliasesExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "AliasesExpression";
+        this.exprType = "AliasesExpression";
         this.createNameBodyMap();
     }
 
@@ -474,7 +508,7 @@ class AliasesExpression extends Expression {
 class AliasExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "AliasExpression";
+        this.exprType = "AliasExpression";
         this.name = jsonExpr.aliasName;
         this.alias = jsonExpr.signalName;
     }
@@ -499,7 +533,7 @@ class AliasExpression extends Expression {
 class FileExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "FileExpression";
+        this.exprType = "FileExpression";
     }
 }
 
@@ -507,7 +541,7 @@ class FileExpression extends Expression {
 class AssertionExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "AssertionExpression";
+        this.exprType = "AssertionExpression";
         ExprFactory.create(this.jsonExpr.assertion, this);
     }
 
@@ -521,7 +555,7 @@ class AssertionExpression extends Expression {
 class GuardExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "GuardExpression";
+        this.exprType = "GuardExpression";
         for([key, value] of Object.entries(this.jsonExpr.guard)) {
             this[key] = ExprFactory.create({ [key]: value}, this);
         }
@@ -547,7 +581,7 @@ class GuardExpression extends Expression {
 class StateExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "StateExpression";
+        this.exprType = "StateExpression";
         ExprFactory.create(this.jsonExpr.state, this);
     }
 
@@ -561,7 +595,7 @@ class StateExpression extends Expression {
 class EventExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "EventExpression";
+        this.exprType = "EventExpression";
         ExprFactory.create(this.jsonExpr.event, this);
     }
 
@@ -578,7 +612,7 @@ class EventExpression extends Expression {
 class ConnectiveExpression extends Expression {
     constructor(jsonExpr, parent, connective) {
         super(jsonExpr, parent);
-        //this.exprType = "ConnectiveExpression";
+        this.exprType = "ConnectiveExpression";
         this.connective = connective;
         ExprFactory.create(this.jsonExpr[connective][0], this);
         ExprFactory.create(this.jsonExpr[connective][1], this);
@@ -614,7 +648,7 @@ class ConnectiveExpression extends Expression {
 class AndExpression extends ConnectiveExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent, 'and');
-        //this.exprType = "AndExpression";
+        this.exprType = "AndExpression";
     }
 }
 
@@ -622,7 +656,7 @@ class AndExpression extends ConnectiveExpression {
 class OrExpression extends ConnectiveExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent, 'or');
-        //this.exprType = "OrExpression";
+        this.exprType = "OrExpression";
     }
 }
 
@@ -630,7 +664,7 @@ class OrExpression extends ConnectiveExpression {
 class SequenceExpression extends ConnectiveExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent, '->');
-        //this.exprType = "SequenceExpression";
+        this.exprType = "SequenceExpression";
     }
 
     evaluate() {
@@ -656,7 +690,7 @@ class SequenceExpression extends ConnectiveExpression {
 class PlottableExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "PlottableExpression";
+        this.exprType = "PlottableExpression";
     }
 
     getLhs() {
@@ -676,7 +710,7 @@ class PlottableExpression extends Expression {
 class BasicExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "BasicExpression";
+        this.exprType = "BasicExpression";
         if(jsonExpr.lhs.hasOwnProperty("function"))
             ExprFactory.create(jsonExpr.lhs, this);
     }
@@ -728,7 +762,7 @@ class BasicExpression extends PlottableExpression {
             intervals.push([intervalStart, this.evalContext.getXmax()]);
         }
         this.validTimes = intervals;
-        console.log("BasicExpression::  this.validTimes = this.getForAdjustedIntervals(this.validTimes);");
+        //console.log("BasicExpression::  this.validTimes = this.getForAdjustedIntervals(this.validTimes);");
         this.validTimes = this.getForAdjustedIntervals(this.validTimes);
         return this.validTimes;
     }
@@ -855,7 +889,7 @@ class BasicExpression extends PlottableExpression {
 class FunctionExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "FunctionExpression";
+        this.exprType = "FunctionExpression";
         var args = this.jsonExpr.function.args;
         for(let i = 0; i < args.length; i++) {
             ExprFactory.create(args[i], this);
@@ -904,7 +938,7 @@ class FunctionExpression extends PlottableExpression {
 class EdgeFunctionExpression extends FunctionExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "EdgeFunctionExpression";
+        this.exprType = "EdgeFunctionExpression";
     }
 
     evaluate() {
@@ -958,7 +992,7 @@ class EdgeFunctionExpression extends FunctionExpression {
 class DerivateFunctionExpression extends FunctionExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "DerivateFunctionExpression";
+        this.exprType = "DerivateFunctionExpression";
         this.timestamps = [];
         this.values = [];
     }
@@ -978,7 +1012,7 @@ class DerivateFunctionExpression extends FunctionExpression {
       this.timestamps = timestamps;
       this.values = values;
 
-      return [];  
+      return [];
     }
 
     getTimestamps(index) {
@@ -1017,7 +1051,7 @@ class DerivateFunctionExpression extends FunctionExpression {
 class ApplyBitMaskFunctionExpression extends FunctionExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "ApplyBitMaskFunctionExpression";
+        this.exprType = "ApplyBitMaskFunctionExpression";
         this.values = undefined;
         this.timestamps = undefined;
         this.validTimes = undefined;
@@ -1083,7 +1117,7 @@ class BetweenFunctionExpression extends FunctionExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
         this.valid = undefined;
-        //this.exprType = "BetweenFunctionExpression";
+        this.exprType = "BetweenFunctionExpression";
     }
 
     _mark_invalid(cause){
@@ -1155,20 +1189,28 @@ class BetweenFunctionExpression extends FunctionExpression {
       }
 
       if(self.startEvents.hasOwnProperty("shortName") ||
-        self.endEvents.hasOwnProperty("shortName")) {
+         self.endEvents.hasOwnProperty("shortName")) {
           self.valid = false;
           self._mark_invalid("Between cannot work directly with Signals. Did you mean rising_edge("+ self.startEvents.shortName+") ?");
           return;
       }
-
+      // arg1 can be event serie, numeric or constant
       if(self.children[0] instanceof NumericArgumentExpression){
           self.startEvents = [self.startEvents];
       }
-
-      if(self.children[1] instanceof NumericArgumentExpression){
+      if(self.children[0] instanceof ConstExpression){
+          self.startEvents = [self.children[0].float];
+      }
+      // arg2 can be serie, numeric or constant
+      if(self.children[1] instanceof NumericArgumentExpression ||
+         self.children[1] instanceof ConstExpression){
         console.log("creating new series offset by", self.endEvents);
-        var offset = parseFloat(self.endEvents);
 
+        var offset = 0;
+        if(self.children[1] instanceof NumericArgumentExpression)
+          offset = parseFloat(self.endEvents);
+        else
+          offset = self.children[1].float
         self.endEvents = [];
         self.startEvents.forEach(function(startEvent){
                 self.endEvents.push(startEvent + offset);
@@ -1204,7 +1246,7 @@ class BetweenFunctionExpression extends FunctionExpression {
 class NotExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "NotExpression";
+        this.exprType = "NotExpression";
         ExprFactory.create(this.jsonExpr.not, this);
     }
 
@@ -1235,7 +1277,7 @@ class NotExpression extends PlottableExpression {
 class DefExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "DefExpression";
+        this.exprType = "DefExpression";
         this.name = this.jsonExpr.def;
         this.body = this.getDefBodyIfExists(this.name);
         if(this.body !== undefined) {
@@ -1297,7 +1339,7 @@ class DefExpression extends PlottableExpression {
 class ConstExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "ConstExpression";
+        this.exprType = "ConstExpression";
         this.name = this.jsonExpr.name;
         this.float = this.jsonExpr.float;
     }
@@ -1327,7 +1369,7 @@ class ConstExpression extends PlottableExpression {
 class NumericArgumentExpression extends Expression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "NumericArgumentExpression";
+        this.exprType = "NumericArgumentExpression";
         this.number = parseFloat(jsonExpr);
     }
 
@@ -1348,7 +1390,7 @@ class NumericArgumentExpression extends Expression {
 class SignalExpression extends PlottableExpression {
     constructor(jsonExpr, parent) {
         super(jsonExpr, parent);
-        //this.exprType = "SignalExpression";
+        this.exprType = "SignalExpression";
         this.signal = this.evalContext.getSignal(jsonExpr);
     }
 

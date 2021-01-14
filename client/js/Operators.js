@@ -1,5 +1,7 @@
-import * as Util from './Util.js';
-import * as EvalContext from './EvalContext.js'
+const Util = require('./Util.js')
+//import * as Util from './Util.js';
+//import * as EvalContext from './EvalContext.js'
+const EvalContext = require('./EvalContext.js')
 /**
  * Derives the 'and' of two lists of time intervals
  *
@@ -35,7 +37,7 @@ import * as EvalContext from './EvalContext.js'
  *
  * @return [[start1, end1], [start2, end2], ...]
  */
-export function and(intervalsOrEvents1, intervalsOrEvents2) {
+ function and(intervalsOrEvents1, intervalsOrEvents2) {
   if (intervalsOrEvents1 === undefined || intervalsOrEvents1.length == 0 ||
           intervalsOrEvents2 === undefined || intervalsOrEvents2.length == 0)
     return [];
@@ -50,6 +52,7 @@ export function and(intervalsOrEvents1, intervalsOrEvents2) {
     return intervalsAnd(intervalsOrEvents1, intervalsOrEvents2);
   }
 }
+exports.and = and;
 
 /**
  * Derives the 'or' of two lists of time intervals
@@ -59,7 +62,7 @@ export function and(intervalsOrEvents1, intervalsOrEvents2) {
  *
  * @return [[start1, end1], [start2, end2], ...]
  */
-export function or(intervalsOrEvents1, intervalsOrEvents2) {
+ function or(intervalsOrEvents1, intervalsOrEvents2) {
   if ((intervalsOrEvents1.length + intervalsOrEvents2.length) == 0)
     return [];
   else if (intervalsOrEvents1.length == 0)
@@ -77,7 +80,7 @@ export function or(intervalsOrEvents1, intervalsOrEvents2) {
     return intervalsOr(intervalsOrEvents1, intervalsOrEvents2);
   }
 }
-
+exports.or = or;
 /**
  * Derives the comlement of a list of intervals, delimited by a start and end value.
  *
@@ -87,7 +90,7 @@ export function or(intervalsOrEvents1, intervalsOrEvents2) {
  *
  * @return complementIntervals [[start1, end1], [start2, end2], ...]
  */
-export function complement(intervalsOrEvents, startValue, endValue) {
+ function complement(intervalsOrEvents, startValue, endValue) {
   if (intervalsOrEvents === undefined || intervalsOrEvents.length == 0)
     return [[startValue, endValue]];
 
@@ -136,7 +139,7 @@ export function complement(intervalsOrEvents, startValue, endValue) {
   }
   return complementIntervals;
 }
-
+exports.complement = complement;
 /**
  * Returns rising edges of a collection of intervals or a binary signal.
  *
@@ -146,7 +149,7 @@ export function complement(intervalsOrEvents, startValue, endValue) {
  *
  * @return rising_edges [edge1, edge2, ...]
  */
-export function rising_edge(data) {
+ function rising_edge(data) {
   if (!Array.isArray(data)) {
     return genericEdgeOnSignalData(data, '>');
   }
@@ -157,8 +160,8 @@ export function rising_edge(data) {
     return data;
   }
 }
-
-export function derivate(data,xThreshold) {
+exports.rising_edge = rising_edge;
+function derivate(data,xThreshold) {
   // forward approximating derivate with threshold to smooth out
   // (forward for getting rid of the first bogus 0 data point)
      //console.log("Operators.js::derivate", data);
@@ -187,8 +190,8 @@ export function derivate(data,xThreshold) {
     }// endif valid data
     throw(new SyntaxError("derivate must take signal data"));
 }
-
-export function derivate_backward(data) {
+exports.derivate = derivate
+function derivate_backward(data) {
   // backward approximating derivate with threshold to smooth out
 
     if(data.hasOwnProperty("xAxis") && data.hasOwnProperty("values")) {
@@ -221,7 +224,7 @@ export function derivate_backward(data) {
     throw(new SyntaxError("derivate must take signal data"));
 }
 
-export function apply_bit_mask(mask, signal) {
+function apply_bit_mask(mask, signal) {
     var timestamps = [0];
     var values = [0];
     var oldValue = 0;
@@ -244,7 +247,7 @@ export function apply_bit_mask(mask, signal) {
 
     return [timestamps, values];
 }
-
+exports.apply_bit_mask = apply_bit_mask;
 
 /**
  * Returns falling edges of a collection of intervals or a binary signal.
@@ -255,7 +258,7 @@ export function apply_bit_mask(mask, signal) {
  *
  * @return falling_edges [edge1, edge2, ...]
  */
-export function falling_edge(data) {
+ function falling_edge(data) {
   if (!Array.isArray(data)) {
     return genericEdgeOnSignalData(data, '<');
   }
@@ -266,7 +269,7 @@ export function falling_edge(data) {
     return data;
   }
 }
-
+exports.falling_edge = falling_edge;
 /**
  * Returns all edges (both falling and rising) of a collection of intervals or
  * a binary signal.
@@ -277,7 +280,7 @@ export function falling_edge(data) {
  *
  * @return edges [edge1, edge2, ...]
  */
-export function edge(data) {
+ function edge(data) {
   if (!Array.isArray(data)) {
     return genericEdgeOnSignalData(data, '!=');
   }
@@ -301,7 +304,8 @@ export function edge(data) {
  *
  * @return between_intervals [[start1, end2], [start2, end 45], ...]
  */
-export function between(startTimestamps, endTimestamps) {
+ /*
+ function between(startTimestamps, endTimestamps) {
   if (Util.areIntervals(startTimestamps) ||
       Util.areIntervals(endTimestamps)) {
     throw "Not implemented: between() works only with events (and not intervals)";
@@ -331,7 +335,7 @@ export function between(startTimestamps, endTimestamps) {
   }
 	return intervals;
 }
-
+*/
 /**
  * Returns event times for an event sequence.
  *
@@ -343,7 +347,8 @@ export function between(startTimestamps, endTimestamps) {
  *
  * @return sequenceTimestamps - [follow 2, follow5, ...]
  */
-export function sequence(precTimestamps, followTimestamps, maxDistance) {
+/*
+ function sequence(precTimestamps, followTimestamps, maxDistance) {
   if (!Util.areEvents(precTimestamps) ||
       !Util.areEvents(followTimestamps))
     throw "Not implemented: sequence() works only with events";
@@ -366,7 +371,7 @@ export function sequence(precTimestamps, followTimestamps, maxDistance) {
   }
   return seqEvents;
 }
-
+*/
 /******************************************************************************/
 /* Private methods                                                            */
 /******************************************************************************/
@@ -510,8 +515,11 @@ function genericEdgeOnSignalData(data, comparisonOperator) {
 }
 function genericEdgeOnIntervals(intervals, edgeIndex) {
   var timestamps = [];
+  let xmax = EvalContext.getInstance().getXmax();
   for (let i=0; i<intervals.length; i++) {
-    timestamps.push(intervals[i][edgeIndex]);
+    let edge = intervals[i][edgeIndex];
+    if(edge >0 && edge < xmax)
+    timestamps.push(edge);
   }
   return timestamps;
 }

@@ -1,25 +1,28 @@
 
 // SignalEditor.vue
 <template>
-  <div  style="background:white;widht=100%" :id=elementid>
-<b-button @click="onRemove" variant="danger" size="sm":disabled="false"> X </b-button>
-<span style="color:#808080">{{this.jsondiff.newName}}   </span>
-    <canvas draggable=false :id=signal_canvas height="300px" style=" display : block;"
-          @mousemove="onMouseMove"
-          @mousedown="onMouseDown"
-          @mouseup="onMouseUp"
-          @mouseleave="onMouseLeave"
-          @dblclick="on_reset_zoom"
-          @dragenter="onDragEnter"
-          @dragleave="onDragLeave"
-          @drop="onDrop"
-          @dragover="onDragOver"
-          @onkeydown="onModifierDown"
-          @click.alt.exact = "onModifierDown"
-          @dragstart="handleDragStartfunction"
+  <div  v-bind:style="{background:validSignal?'white':'lightgray',width:'100%'}" :id=elementid>
+      <b-button @click="onRemove" variant="danger" size="sm":disabled="false"> X </b-button>
+      <span style="color:#808080"
+           draggable="true"
+         @dragstart="onStartDrag($event, jsondiff.newName)"
+         >{{jsondiff.newName}}   </span>
+          <canvas draggable=false :id=signal_canvas heigth="300px" style=" display : block;"
+                @mousemove="onMouseMove"
+                @mousedown="onMouseDown"
+                @mouseup="onMouseUp"
+                @mouseleave="onMouseLeave"
+                @dblclick="on_reset_zoom"
+                @dragenter="onDragEnter"
+                @dragleave="onDragLeave"
+                @drop="onDrop"
+                @dragover="onDragOver"
+                @onkeydown="onModifierDown"
+                @click.alt.exact = "onModifierDown"
+                @dragstart="handleDragStartfunction"
 
-    >
-    Your browser does not support the HTML5 canvas tag.</canvas>
+          >
+          Your browser does not support the HTML5 canvas tag.</canvas>
 
 
 </div>
@@ -30,14 +33,14 @@
 
 
 import bus from "./EventBus.vue"
+import * as EvalContext from './EvalContext.js';
 import * as Util from './Util.js';
 import {SignalCanvasAxis} from './signalcanvas.js';
-import bButton from 'bootstrap-vue/es/components/button/button';
-
+ 
 export default {
     name: 'signalcanvas',
     components: {
-        bButton
+
     },
     props:{
       elementid:{
@@ -65,10 +68,16 @@ export default {
                      xAxis: [10, 20, 30, 40, 50],
                      values: [0, 0.5, 14, 39, 150]
                    },
-          inject:['zoom_xmin','zoom_xmax']
+          inject:['zoom_xmin','zoom_xmax'],
+          validSignal:false
         } // data:return
     }, // data
     methods:{
+      onStartDrag(e,signalName) {
+        //console.log("SignalCanvas.vue::DRAGGING ",signalName)
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/html', signalName);
+      },
       onRemove:function(e){
         bus.$emit('signaleditor-removed', this.elementid);
       },
@@ -79,6 +88,9 @@ export default {
       onDragOver:function(e){
         //console.log("SignalCanvas::onDragOver")
          e.preventDefault();
+         if (e.stopPropagation) {
+           e.stopPropagation(); // Stops some browsers from redirecting.
+         }
          //e.dataTransfer.dropEffect = 'copy';
       },
       onDragEnter:function(e){
@@ -92,8 +104,8 @@ export default {
       loadSignal(signame){
         //console.log("onDrop:Dropped signal is [" +  signame.trim() + "]");
 
-        var sig = bus.getEvalContext().getSignal(signame.trim());
-        console.log("SignalCanvas:loadSignal::Checking signal " + signame + " for existance ", sig != null, bus.getEvalContext().magic_nr);
+        var sig = EvalContext.getInstance().getSignal(signame.trim());
+        //console.log("SignalCanvas:loadSignal::Checking signal " + signame + " for existance ", sig != null, EvalContext.getInstance().magic_nr);
 
         if (sig != undefined){
           //console.log("Received " + JSON.stringify(sig));
@@ -105,21 +117,25 @@ export default {
          this.ax.name = sig.name;
 
          bus.$emit('signalcanvas-reset-zoom');
-
+        this.validSignal = true;
        }//non-null-signal
        else{
-         console.log("Signal cannot be found")
+         console.log("Signal " + signame + " cannot be found")
+        this.validSignal = false;
        }
      },
       onDrop:function(e){
         if (e.stopPropagation) {
           e.stopPropagation(); // Stops some browsers from redirecting.
         }
-        //console.log("SignalCanvas::onDrop")
+        e.preventDefault();
         let signame = e.dataTransfer.getData('text/html');
-        //console.log("Dropped " + signame)
+        if(signame === "") // it probably comes from a text field
+        signame = e.dataTransfer.getData('text')
+        //console.log("SignalCanvas::onDrop incoming::data ", signame);
         signame = signame.substr(signame.indexOf(">")+1);
-        this.loadSignal(signame);
+       this.loadSignal(signame);
+
         return false;
       },
       on_reset_zoom:function(){

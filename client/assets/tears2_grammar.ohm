@@ -1,0 +1,256 @@
+Tears2Grammar {
+
+
+SPEC = filename?  Graces Statements
+filename = "@" identifier
+Graces     = (GracePeriodSpec| Allow)*
+Statements = (   EventDef | IntervalsDef | Constant | Alias | GA)*
+
+/*---------------------- Terminals -------------------------------------*/
+ ignore = caseInsensitive<"ignore">
+ allow = caseInsensitive<"allow">
+ fail = caseInsensitive<"fail">
+ and = caseInsensitive<"and">
+ or = caseInsensitive<"or">
+ while = caseInsensitive<"while">
+ for = caseInsensitive<"for">
+ within = caseInsensitive<"within">
+ without = caseInsensitive<"without">
+ 
+ shall =  (caseInsensitive<"shall"> |caseInsensitive<"verify">)
+ when = caseInsensitive<"when">
+ sequence = caseInsensitive<"sequence">
+ def = caseInsensitive<"def">
+ true = caseInsensitive<"true">
+ false= caseInsensitive<"false">
+ inf= caseInsensitive<"inf">
+ events=caseInsensitive<"events">
+ intervals=caseInsensitive<"intervals">
+
+ after = caseInsensitive<"after">
+ alias = caseInsensitive<"alias">
+ const = caseInsensitive<"const">
+ where = caseInsensitive<"where">
+
+ risingEdge = caseInsensitive<"rising_edge">
+ fallingEdge = caseInsensitive<"falling_edge">
+ cycle = caseInsensitive<"cycle">
+ abs = caseInsensitive<"abs">
+ between = caseInsensitive<"between">
+ derivative = caseInsensitive<"derivative">
+ bitmask = caseInsensitive<"bitmask">
+ count = caseInsensitive<"count">
+ logStart = caseInsensitive<"logStart">
+ logEnd = caseInsensitive<"logEnd">
+ odd = caseInsensitive<"odd">
+ even = caseInsensitive<"even">
+ not = caseInsensitive<"not">
+ maxVal = caseInsensitive<"maxVal">
+ select = caseInsensitive<"select">
+ exists = caseInsensitive<"exists">
+ 
+ during = caseInsensitive<"during">
+ all = caseInsensitive<"all">
+ some = caseInsensitive<"some">
+ 
+ keyword (Keyword) =
+ /*GROUP.    1.      2.     3.       4.     5.             6.            7.*/
+           where  | and | for    | true  | def     | supportFunctions
+         | when   | or  | within | false | alias   | events
+         | while                 | inf   | const   | intervals
+         | shall                                   | sequence |                 ignore 
+         |                                                            allow | fail
+
+/*----------------------------------------------------------------------------*/
+GracePeriodSpec = ignore ("<"|">") Timeout
+Allow = allow Timeout fail
+/*----------------------------------------------------------------------------*/
+
+GA = ((identifier "=")? Config? GuardedAssertion)
+GuardedAssertion =
+          while IntervalGuard (shall IntervalAssertion)*    --intervalGA
+        | when  EventGuard    (shall EventsAssertion)*      --eventGA
+
+Config = where BoolExpr
+
+BoolExpr = BoolExpr (and|or) BoolExpr        --conj
+          | BoolExpr ("==" | "!=") BoolExpr  --eq
+          | Num RelationalOperator Num       --op
+          | BooleanFunction                  --func
+          | Boolean                          --boolean
+          | identifier                       --constOrAlias
+          | "(" BoolExpr ")"                 --para
+
+Boolean = (true | false )
+BooleanFunction =
+    exists "(" identifier ")"                --exists
+/*-------------------------------------------------------------------------------*/
+Constant = const identifier "=" (Timeout | Num | Boolean)
+
+IntervalsDef   = def intervals identifier "="  Intervals
+EventDef       = def events identifier    "="  Events
+
+Alias = alias identifier "=" identifier
+
+definedEvents = identifier
+definedIntervals = identifier
+
+/*----------------------------------------------------------------------------*/
+   IntervalGuard = Intervals
+
+   IntervalAssertion = Intervals WithinExpression?           --within
+
+   Intervals (Interval Expression) =
+      IntervalsExpr TimeFilter* ((and|or) IntervalsExpr TimeFilter* )*    --conj
+/*-----------------------------------------------------------------------------*/
+   IntervalsExpr(Interval Expression) =
+
+       | "(" Intervals ")"                               --parentheses
+       | IntervalFunction                                --func
+       | Signal RelationalOperator Signal                --logop
+       | true                                            --true
+       | false                                           --false
+       | definedIntervals				                 --def
+       |"[" ListOf<Interval, ","> "]"                    --list
+
+   Interval = "[" Timeout "," Timeout "]"
+
+   TimeFilter  =
+          "longer than" Timeout                       --atLeast
+       |  "shorter than" Timeout                      --atMost
+
+   RelationalOperator = ("==" | "!=" | "~=" | ">=" | ">" | "<=" | "<")
+
+   IntervalFunction =
+        between "(" (Events|Timeout) "," (Events|Timeout) ")" --between
+      | not "(" Intervals ")"                               --not
+   /*----------------------------------------------------------------------------*/
+
+   Signal  (Signal function, float, alias or const) =
+             Signal ("+" | "-" | "/" | "*") Signal    --sigOpSig
+            | SignalFunction                          --func
+            | Signal "at" identifier                  --eventSampled
+            | (true | false)                          --boolean
+            | identifier                              --sigAliasConst
+            | Num                                     --numerical
+          	| "(" Signal ")"						  --parentheses
+
+    SignalFunction =
+           derivative "(" (Timeout ",")? Signal ")"        --derivative
+         | abs "(" Signal ")"                              --abs
+         | bitmask "(" IntegerOrConst "," Signal ")"       --bitmask
+         | count "(" Events "," Intervals ")"              --counts
+         | maxVal "(" NonemptyListOf< Signal, ","> ")"     --maxVal
+   		 | select "(" Signal "," Signal "," Signal ")"     --select
+         | exists "("  identifier ")"                      --exists
+
+    /*----------------------------------------------------------------------------*/
+
+    EventGuard    = Events
+
+    EventsAssertion =
+        Intervals ForExpression    WithinExpression      --forWithin  /* === Events WithinExpression*/
+       | Events WithinExpression                         --within
+       | Intervals WithinExpression? ForExpression?      --withinFor
+//        | Intervals WithinExpression?                  --stateWithin/* === Intervals WithinExpression? ForExpression? */
+
+     Events (Event Expression)=
+     			Sequence
+     		  | Events   and  Intervals                        --andIntervals
+          | Events   EventsConj  Events                        --conj          /* prohibit I or E, E or I, E and E */
+          | Events ("+"|"-") Timeout                           --nudge
+          | EventsExpr
+          | "(" Events ")"									   --para
+
+     Sequence =  sequence Events WithinExpression? Store? ("->" Events WithinExpression Store? )*
+
+     EventsConj = or                                               --or
+               | after                                             --after
+
+     EventsExpr (Event Expression) =
+           "(" Events ")"                                     --parentheses
+         | EventFunctions                                     --function
+         | Intervals and Events                               --intervalAnd
+         | IntervalsExpr ForExpression                        --intervalFor
+         | definedEvents                                      --def
+         |"[" ListOf<Timeout, ","> "]"                        --list
+
+    EventFunctions =
+        | risingEdge  "(" Intervals ")"                     --risingEdge
+        | fallingEdge "(" Intervals ")"                     --fallingEdge
+        | cycle"(" (Events ",")? Timeout ")"                --cycle
+        | logStart "(" Signal ")"                           --logStart
+        | logEnd   "(" Signal ")"                           --logEnd
+        | all "(" NonemptyListOf< Signal, ","> ")" (during (Intervals | Timeout))? --all
+    Store =
+            "store value" identifier "as" identifier          --val
+           |"store timepoint" "as" identifier                 --time
+   /*----------------------------------------------------------------------------*/
+
+    ForExpression    = for   Timeout
+    WithinExpression = within Timeout
+
+
+    supportFunctions =
+              risingEdge
+            | fallingEdge
+            | derivative
+            | abs
+            | bitmask
+            | count
+            | cycle
+            | maxVal
+            | not
+            | select
+            | exists
+            | all
+            | during
+
+    Time = Float TimeUnit                       --number
+            | identifier                        --constOrAlias
+
+    Timeout (Time and unit) = sign? inf          --inf
+            | FloatOrConst TimeUnit?             --floatOrConst
+
+    TimeUnit = ("s"~"h" | "ms"~"h")
+
+    Num = FloatOrConst                   --float
+
+    FloatOrConst = Float                 --number
+                | identifier             --constOrAlias
+
+    Float = sign? digit+ ("." digit+)?
+
+    IntegerOrConst = Integer             --number
+                   | identifier          --constOrAlias
+
+    Integer = sign? digit+
+    sign = ("+" | "-")
+
+    specialChar   = ("_" | "[" | "]" | "." | "|" | ":")
+    mustQuoteChar  = "-" | "+" | " " | "(" | ")" | "*" | "/"
+
+    identifier ="'" idstring_quoted "'"                 --quoted
+                 | idstring
+
+    idstring = ~digit ~(keyword whitespace) letter+ (specialChar | alnum)*
+    idstring_quoted = (specialChar | mustQuoteChar | alnum)+
+
+    // ------- START Adopted from JavaScript ES5 ----------------------------------
+    space := whitespace | lineTerminator | comment
+
+    whitespace = "\t"
+               | "\x0B"    -- verticalTab
+               | "\x0C"    -- formFeed
+               | " "
+
+    lineTerminator = "\n" | "\r" | "\u2028" | "\u2029"
+    lineTerminatorSequence = "\n" | "\r" ~"\n" | "\u2028" | "\u2029" | "\r\n"
+
+    comment = multiLineComment | singleLineComment
+
+    multiLineComment = "/*" (~"*/" any)* "*/"
+    singleLineComment = "//" (~lineTerminator any)*
+
+    // ------- END Adopted from JavaScript ES5 ----------------------------------
+}

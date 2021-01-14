@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [{
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Program",
+            "program": "${workspaceRoot}\\index.js",
+            "runtimeArgs": [
+                "--max-old-space-size=4096"]
+        }
+        
+    ]
+}
