@@ -1,4 +1,9 @@
-# SAGA-TOOL
+# NAPKIN
+NAPKIN is a fork/continuation of the SCANIA+RISE project SAGA https://github.com/scania/saga.git 
+
+It is currently under some heavy development and depends on another private repo, btsaga. As soon as these dependencies have been resolved, the repository will be opened for the public. 
+
+
 ## Preparing the development environment
 This README contains instruction for both Linux and Windows, so please be patient and keep reading!
 # LINUX
