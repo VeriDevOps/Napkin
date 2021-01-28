@@ -1,44 +1,4 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan 30 08:53:43 2020
 
-@author: dfm01
-# 2020-09-22 Daniel Flemström - REQ 267 commented out. It should never have been there. 
-# 2020-05-10 Daniel Flemstrom - REQ-275 commented out. The interface is not available. 
-# 2020-01-29 Daniel Flemstrom
-# This list is validated towards the traceability matrix. 
-# Note that we use the non canonical DB form since one test case may satisfy
-# more than one requirement as the following example(the other way around):
-#{'REQ': 'SR_C30_SRS_Safe-REQ-244', 'TC': "TC-DriveBrake-S-016"},
-#{'REQ': 'SR_C30_SRS_Safe-REQ-244', 'TC': "TC-DriveBrake-S-024"},
-
-
-"TC-DriveBrake-S-007" 255 saknas ADD TO GA-LIBRARY
-
-"TC-DriveBrake-S-016" 454 missing OK cannot be tested in TAF
-
-"TC-DriveBrake-S-024" 251 already covered by 244
-
-This test case is empty so we should remove it from the session "TC-DriveBrake-S-030" 203,204,205,206,207,321,449
-
-Possibly, we remove these since we mutate DRS only. "TC-TrainInaug-S-008" "TC-TrainInaug-S-010" "TC-TrainInaug-S-014" "TC-Fire-S-004" "TC-Fire-S-005" "TC-Fire-S-006" "TC-Fire-S-007"
-
-Denna krashar så vi borde ta bort den helt "TC-ExtLights-S-003"
-
-Anv bara för att kolla vcs "Re-initiate VCS" "Initiate TCMS"
-
-
-EXEMPEL 
-from req_tc_map import req_tc_map
-
-for name,grp in req_tc_map.groupby('TC'):   #or ('REQ')
-    print (name)
-    print (grp['REQ'].values)
-    print ("--------------------------------------------------------------")
-    
-
-"""
 import pandas as pd
 
 
@@ -64,7 +24,6 @@ req_info = [#pd.DataFrame(\
 {'REQ': 'SR_C30_SRS_Safe-REQ-248', 'TC': 'TC-DriveBrake-S-018', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-248'}]},
 {'REQ': 'SR_C30_SRS_Safe-REQ-258', 'TC': 'TC-DriveBrake-S-001', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-258'}]},
 {'REQ': 'SR_C30_SRS_Safe-REQ-259', 'TC': 'TC-DriveBrake-S-001', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-259'}]},
-#{'REQ': 'SR_C30_SRS_Safe-REQ-267', 'TC': 'TC-DriveBrake-S-007', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-267'}]}, #2020-09-22 Should never been there.
 {'REQ': 'SR_C30_SRS_Safe-REQ-281', 'TC': 'TC-DriveBrake-S-021', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-281'}]},
 {'REQ': 'SR_C30_SRS_Safe-REQ-283', 'TC': 'TC-DriveBrake-S-019', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-283'}]},
 {'REQ': 'SR_C30_SRS_Safe-REQ-254', 'TC': 'TC-DriveBrake-S-005', 'ga_list': [{'name': 'SR_C30_SRS_Safe-REQ-254'}]},
@@ -86,7 +45,7 @@ req_tc_map = pd.DataFrame(req_info)
 def _create_traceability_map(req_info):  
     tcmap = {}
     tcmaplist = pd.DataFrame(req_info)
-    for ix,row in tcmaplist.iterrows():
+    for _ix,row in tcmaplist.iterrows():
         tc = row['TC']
         rq = row['REQ']
         rqs =  tcmap.get(tc,[])
