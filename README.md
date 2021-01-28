@@ -2,7 +2,14 @@
 NAPKIN is a fork/continuation of the SCANIA+RISE project SAGA https://github.com/scania/saga.git 
 
 It is currently under some heavy development and depends on another private repo, btsaga. As soon as these dependencies have been resolved, the repository will be opened for the public. 
+### Breaking news
+2021-01-28 Code break-out from research computer. You will now have to install the package bt from packages_src
 
+```
+cd  <.....>napkin/packages_src/bt
+conda develop .
+
+```
 
 ## Preparing the development environment
 This README contains instruction for both Linux and Windows, so please be patient and keep reading!
