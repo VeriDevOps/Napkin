@@ -17,10 +17,8 @@ const EvalContext = require('../client/js/EvalContext.js')
 const FileFormats = require('../client/js/FileFormats.js');
 const { argv } = require('process');
 
-
-
 //---------------------------------------------------------------------------------
-// ------------------------   Parameters and Globals ------------------------------
+//                            Parameters and Globals  
 //---------------------------------------------------------------------------------
 
 var default_main_definition_file = "/Users/dfm01/Dropbox/BTSAGA-Ind-Eval/C30/Safe/main_definitions.ga" ;
@@ -28,7 +26,7 @@ var default_main_definition_src  = fs.readFileSync(default_main_definition_file,
 var debug = false;
 
 //---------------------------------------------------------------------------------
-// -------------------------   load_and_set_context -------------------------------
+//                             load_and_set_context  
 //---------------------------------------------------------------------------------
 function load_and_set_context( log_file,        // fullpath
                                 main_defs,      // fullpath to main definitions file
@@ -45,7 +43,7 @@ function load_and_set_context( log_file,        // fullpath
                 log_format);
 }
 //---------------------------------------------------------------------------------
-// -----------------------------   set_context ------------------------------------
+//                                  set_context  
 //---------------------------------------------------------------------------------
 
 function set_context(log_file = "auto",   // str, fullpath (for documentation)
@@ -74,7 +72,7 @@ function set_context(log_file = "auto",   // str, fullpath (for documentation)
     //var tctx = (new Date().getTime() / 1000) - ts;  
 }
 //---------------------------------------------------------------------------------
-// ------------------------   load_and evaluate   ---------------------------------
+//                            load_and evaluate    
 //---------------------------------------------------------------------------------
 function load_and_evaluate( log_file, ga_file){
     let ga_text = fs.readFileSync(ga_file, 'utf8');
@@ -84,7 +82,7 @@ function load_and_evaluate( log_file, ga_file){
                     );
 }
 //---------------------------------------------------------------------------------
-// -----------------------------    evaluate   ------------------------------------
+//                                  evaluate    
 //---------------------------------------------------------------------------------
 function evaluate( log_file,  // logfile (for documentation)
                    ga_file,   // ga-file (for documentation)
@@ -198,7 +196,7 @@ if (require.main === module) {
 }//main (if not used in script)
 
 //---------------------------------------------------------------------------------
-// -----------------------------    EXPORTS    ------------------------------------
+//                                  EXPORTS     
 //---------------------------------------------------------------------------------
 
 exports.load_and_set_context = load_and_set_context;

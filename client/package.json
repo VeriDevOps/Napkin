@@ -1,14 +1,14 @@
 {
-  "name": "gaeditorweb2.1",
-  "description": "SAGA TOOL. Property of Scania AB under Patent SE 540 377 C2. Distribution / reverse engineering without explict permission prohibited.",
+  "name": "Napkin1.0",
+  "description": "Fork of the SAGA TOOL. Property of Scania AB under Patent SE 540 377 C2. Distribution / reverse engineering without explict permission prohibited.",
   "version": "1.0.1",
-  "author": "Scania AB, RISE Research Institutes of Sweden AB",
+  "author": "Daniel Flemström,Scania AB, RISE Research Institutes of Sweden AB",
   "private": true,
   "scripts": {
     "dev": "npm run dev-client | npm run dev-server | npm run dev-auto-update-server",
     "dev-client": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --open --hot",
     "dev-server": "python3 ../server/server.py -d",
-    "dev-auto-update-server": "python /Users/dfm01/Documents/aProjects/BT-Sensitive/SAGA-BT-C30-Study/src/packages_src/btsaga/btsaga/auto_updater.py -d",
+    "dev-auto-update-server": "python ../packages_src/bt/bt/auto_updater.py -d",
     "build": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules"
   },
   "dependencies": {
@@ -16,6 +16,9 @@
     "axios": "^0.21.1",
     "bootstrap-vue": "^2.5.0",
     "brace": "^0.11.1",
+    "cross-env": "^5.2.1",
+    "cross-var": "^1.1.0",
+    "dotenv": "^8.2.0",
     "dryice": "^0.4.11",
     "dygraphs": "^2.1.0",
     "events": "^3.1.0",
@@ -34,7 +37,6 @@
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
     "concurrently": "^3.6.1",
-    "cross-env": "^5.2.0",
     "css-loader": "^0.28.11",
     "file-loader": "^1.1.4",
     "jasmine-core": "^3.5.0",

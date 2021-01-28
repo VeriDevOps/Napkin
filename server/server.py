@@ -8,32 +8,31 @@
 # Author: tguc8n
 ################################################################################
 # Purpose:
+# TODO: Refactor so we have a generic interface with modules for 
+# accessing company specific repositories etc. 
 """
 """
 ################################################################################
 
-from autobahn.asyncio.websocket import WebSocketServerProtocol, WebSocketServerFactory
-from bottle import get, post, run, template, request, redirect, static_file
-import threading
-import json
-import time
-import os, sys, getopt
+import getopt
 import glob
 import http.client
-
-## BT SPECIFIC we need to solve this better
+import json
+import os
 import sys
-sys.path.append("/Users/dfm01/Documents/aProjects/BT-Sensitive/SAGA-BT-C30-Study/src/btsaga")
-sys.path.append("/Users/dfm01/Documents/aProjects/BT-Sensitive/SAGA-BT-C30-Study/src/btconverter")
+import threading
+import time
+from pathlib import Path
 
+from autobahn.asyncio.websocket import (WebSocketServerFactory,
+                                        WebSocketServerProtocol)
+from bottle import get, post, redirect, request, run, static_file, template
+from dotenv import load_dotenv
 
 try:
     import win32api
 except ImportError:
     pass
-
-
-
 
 @get('/')
 ################################################################################
@@ -73,30 +72,7 @@ class webserver_thread(threading.Thread):
         """
         """
         run(host="0.0.0.0", port = self.__port)
-
-    ################################################################################
-    def capture_get(id):
-        """
-        Get capture data
-        """
-        if id == "undefined":
-            print("The id is " + str(id))
-            return {}
-        else:
-            print("Trying to connect to Treo")
-            treo = http.client.HTTPConnection("ilab3_utv_tools", 8080)
-            treo.request("GET", "/api/capture?id=" + id)
-            response = treo.getresponse()
-            if response.status == 200:
-                print("Got response 200")
-                data = response.read()
-                data = json.loads(data)
-                treo.close()
-                return data
-            else:
-                print("Got response " + str(response.status))
-                treo.close()
-
+ 
 
 ################################################################################
 ################################################################################
@@ -129,11 +105,8 @@ class MyWebsocket(WebSocketServerProtocol):
 
     ############################################################################
     def onMessage(self, payload, isBinary):
-        """
-        """
-
         req = json.loads(payload.decode('utf8'))
-        #print("MyWebsocket::onMessage, got a message", req,request)
+        print("MyWebsocket::onMessage, got a message", req,request)
         action = self.actions.get(req["type"], self.default)
         action(req)
 
@@ -294,24 +267,32 @@ class MyWebsocket(WebSocketServerProtocol):
 
     #----------------------------------------------------------------------------
     def load_mongo(self, req):
-        capture_jsondiff = capture_get(req["id"])
+        capture_jsondiff = self.capture_get(req["id"])
         self.sendMessage(json.dumps({"type" : "file", "data" : capture_jsondiff}).encode('utf_8'))
-
-
+    #-----------------------------------------------------------------------------
+    def capture_get(self,id):
+        """
+        Get capture data
+        """
+        if id == "undefined":
+            print("The id is " + str(id))
+            return {}
+        else:
+            print("Trying to connect to Treo")
+            treo = http.client.HTTPConnection("ilab3_utv_tools", 8080)
+            treo.request("GET", "/api/capture?id=" + id)
+            response = treo.getresponse()
+            if response.status == 200:
+                print("Got response 200")
+                data = response.read()
+                data = json.loads(data)
+                treo.close()
+                return data
+            else:
+                print("Got response " + str(response.status))
+                treo.close()
 ################################################################################
 if __name__ == "__main__":
-    """ Start the webserver thread, but only if the development option (-d) is not supplied """
-
-    if False:
-
-        try:
-            opts, args = getopt.getopt(sys.argv[1:], "d")
-            if not opts:
-                webserverthread = webserver_thread(50001)
-                webserverthread.start()
-        except getopt.GetoptError:
-            print("WARN: The option was not recognized. Please, relaunch as: \"python server.py\" (both websocket and server threads) OR \"python server.py -d\" (only websocket)")
-
     """ Start the websocket """
     websocket_port = 4001
     try:
@@ -325,7 +306,7 @@ if __name__ == "__main__":
     coro = loop.create_server(factory, '0.0.0.0', websocket_port)
     server = loop.run_until_complete(coro)
 
-    os.spawnl(os.P_NOWAIT, 'python','/Users/dfm01/Documents/aProjects/BT-Sensitive/SAGA-BT-C30-Study/src/btsaga/auto_updater.py')
+    #os.spawnl(os.P_NOWAIT, 'python','./auto_updater.py')
     try:
         print("The websocket is up'n'running on port " + str(websocket_port) + "...")
         loop.run_forever()
