@@ -6,8 +6,8 @@ It is currently under some heavy development and depends on another private repo
 2021-01-28 Code break-out from research computer. You will now have to install the package bt from packages_src
 
 ```
-cd  <.....>napkin/packages_src/bt
-conda develop .
+    cd  <.....>napkin/packages_src/bt
+    conda develop .
 
 ```
 
@@ -17,13 +17,13 @@ This README contains instruction for both Linux and Windows, so please be patien
 ### Starting with a newly installed ubuntu 16 LTS :
 
 ````
-sudo apt-get update
-sudo apt-get install --yes curl
-curl --silent --location https://deb.nodesource.com/setup_8.x | sudo bash -
+    sudo apt-get update
+    sudo apt-get install --yes curl
+    curl --silent --location https://deb.nodesource.com/setup_8.x | sudo bash -
 
-sudo apt-get install --yes nodejs
+    sudo apt-get install --yes nodejs
 
-sudo apt-get install --yes npm
+    sudo apt-get install --yes npm
 ````
 
  No longer necessary (I think) sudo npm install npm@5.7 -g
@@ -34,12 +34,12 @@ sudo apt-get install --yes npm
  
 # COMMON
 ```
-npm install style-loader --save
-sudo apt-get install --yes git
+  npm install style-loader --save
+  sudo apt-get install --yes git
 
-sudo apt install python3-pip3
-sudo pip3 install autobahn
-sudo pip3 install bottle
+  sudo apt install python3-pip3
+  sudo pip3 install autobahn
+  sudo pip3 install bottle
 ````
 # Cloning the source 
 
@@ -51,12 +51,12 @@ Give your personal access token instead of the password if you use 2FA. If you d
 
 ## Extra Dependencies
 ```
-cd client 
-npm install .
-npm install bootstrap-vue@1.5.0
-npm run dev
-npm install  webpack@^1.0.0
-npm install webpack@^2.2.0
+  cd client 
+  npm install .
+  npm install bootstrap-vue@1.5.0
+  npm run dev
+  npm install  webpack@^1.0.0
+  npm install webpack@^2.2.0
 
 ```
 
@@ -64,8 +64,8 @@ For unknown reason, there is a npm_modules under
 `client/js/brace` as well. Probably only needed if you rebuild ace editor. A `npm install .`should do it if that is the case. 
 
 ````
-cd client/js
-node install .
+    cd client/js
+    node install .
 
 
 ````
@@ -87,12 +87,12 @@ https://www.anaconda.com/download/
 
 py3k is the environment with python3 i have created with
 ```
-conda  create --name py3k python=3.5
+    conda  create --name py3k python=3.5
 
-source activate py3k
-conda install pip
-pip install autobahn
-pip install bottle
+    source activate py3k
+    conda install pip
+    pip install autobahn
+    pip install bottle
 ```
 
 
@@ -102,10 +102,10 @@ pip install bottle
 
 
 ```
-npm install karma-jasmine --save-dev
-npm install jasmine-core --save-dev
+    npm install karma-jasmine --save-dev
+    npm install jasmine-core --save-dev
 
-npm install ajv@^6.0.0
+    npm install ajv@^6.0.0
 ```
 
 * Check with  `../server/> python3 server.py`
@@ -133,7 +133,7 @@ https://ohmlang.github.io/editor/#30325d346a6e803cc35344ca218d8636
 
 
 ## TO BUILD A RELEASE:
-In the e/saga/src/gaeditorweb2.1/client directory;
+In the ../client directory;
 ```
 npm run build
 ```

@@ -1,7 +1,4 @@
-# gaeditorweb2.1
-
-> GA editor project, implemented using Vue.js
-
+# Napkin Client
 ## Build Setup
 
 ``` bash
