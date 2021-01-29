@@ -74,11 +74,6 @@ def relative_url(s1:str,s2:str):
         raise RuntimeError(f"Path {s2} cannot be made relative to {s1} ")
     else:
         rel = os.path.sep.join(['..' for s in range(0,len(s1) - lix)])   + os.path.sep + os.path.sep.join(s2[lix:])
-        print("RELATIVE PATH CREATED AS " )
-        print(s1)
-        print(s2)
-        print(rel)
-        print(default_server_path + "/" + rel)
         return rel
 
 def test_relative_url():
