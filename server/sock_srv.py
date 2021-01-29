@@ -26,7 +26,7 @@ from pathlib import Path
 
 from autobahn.asyncio.websocket import (WebSocketServerFactory,
                                         WebSocketServerProtocol)
-from bottle import get, post, redirect, request, run, static_file, template
+from bottle import get, post, redirect, request, run, static_file, template, route
 from dotenv import load_dotenv
 
 try:
@@ -39,22 +39,30 @@ except ImportError:
 def home():
     """
     """
-    return redirect('/client/index.html')
-
+    print("----------------------------------------------------------------------->home():Redirecting to index.html")
+    return redirect('index.html')
+'''
 @get('/client/<name>')
 ################################################################################
 def static(name):
     """
     """
+    print("----------------------------------------------------------------------->static(name):",name)
     return static("", name)
 
-@get('/client/<_dir>/<name>')
+@get('/dist/<_dir>/<name>')
 ################################################################################
 def static(_dir, name):
     """
     """
-    return static_file(name, root = "../client/" + _dir)
+    print(f'----------------------------------------------------------------------->static(_dir, name)::[{dir}][{name}]->{"../dist/" + _dir}/{name}')
+ 
+    return static_file(name, root = "../dist/" + _dir)
+'''
 
+@route('/static/<filename>')
+def server_static(filename):
+    return static_file(filename, root='/dist')
 ################################################################################
 ################################################################################
 class webserver_thread(threading.Thread):
@@ -76,6 +84,9 @@ class webserver_thread(threading.Thread):
 
 ################################################################################
 ################################################################################
+
+def get_absolute_path(path):
+    return os.path.dirname(os.path.abspath(__file__)) + os.path.sep + path
 class MyWebsocket(WebSocketServerProtocol):
     """
     """
@@ -126,7 +137,7 @@ class MyWebsocket(WebSocketServerProtocol):
             drives = drives.split('\000')[:-1]
             for drive in drives:
                 ret.append({"type" : "dir", "name" : drive, "path" : drive})
-        except Exception as e:
+        except Exception as _e:
             ret = [{"type" : "dir", "name" : "/", "path" : "/"}]
         ret = {"type" : "browser" + str(req["browsercnt"]), "files" : ret}
         self.sendMessage(json.dumps(ret), False)
@@ -166,42 +177,47 @@ class MyWebsocket(WebSocketServerProtocol):
 
     #----------------------------------------------------------------------------
     def load_file(self, req):
-        #print("DBG tryimg to load file")
+        #print("Websocket:DBG trying to load file")
         try:
-            with open(req["path"]) as fp:
+            with open(os.path.dirname(os.path.abspath(__file__)) + os.path.sep + req["path"]) as fp:
                 d = json.load(fp)
             self.sendMessage(json.dumps({"type" : "file", "data" : d}).encode('utf_8'))
-        except IOError:
-            print("File not found: " + os.path.dirname(os.path.abspath(__file__)) + "/" + req["path"])
-            # throw e
+        except IOError as e:
+            print("File not found: " + os.path.dirname(os.path.abspath(__file__)) + os.path.sep + req["path"])
+            print(e)
     #----------------------------------------------------------------------------
     def bt_load_ga(self, req):
         #print("Websocket: ",repr(req))
+        fpath = get_absolute_path(req["path"])
         try:
-            with open(req["path"]) as fp:
+            with open(fpath,'r') as fp:
                 d = fp.read()
             #print("WebSockwet::onMessage trying to send ",d)
             self.sendMessage(json.dumps({"type" : "ga-text", "data" : d}).encode('utf_8'))
-        except IOError:
-            print("GA-File not found: " + os.path.dirname(os.path.abspath(__file__)) + "/" + req["path"])
+        except IOError as e:
+            print(f"GA-File not found: [{fpath}] ")
+            print(e)
             # throw e
     #----------------------------------------------------------------------------
     def bt_load_ga_main(self, req):
         #print("Websocket: ",repr(req))
+        fpath = get_absolute_path(req["path"])
         try:
-            with open(req["path"]) as fp:
+            with open(fpath,'r') as fp:
                 d = fp.read()
             print("WebSockwet::onMessage trying to send main file",req["path"])
             self.sendMessage(json.dumps({"type" : "ga-main", "data" : d,"filename":os.path.basename(req["path"])}).encode('utf_8'))
-        except IOError:
-            print("GA-File not found: " + os.path.dirname(os.path.abspath(__file__)) + "/" + req["path"])
+        except IOError as e:
+            print(f"Main-Def-File not found: [{fpath}] ")
+            print(e)
             #  throw e
     #----------------------------------------------------------------------------
     def bt_load_log(self, req):
         #print("Websocket: ",repr(req))
+        fpath = get_absolute_path(req["path"])
         try:
             print("WebSockwet::onMessage trying to send ",req["path"])
-            with open(req["path"]) as fp:
+            with open(fpath,'r') as fp:
                     logdata = fp.read()
                     #print("WebSockwet::onMessage trying to send ",d)
                     chunksize = 32*1024*1024 # Max IPC Message size due to Mozilla chrash
@@ -220,23 +236,24 @@ class MyWebsocket(WebSocketServerProtocol):
                                                             "formatid":1 #BT CSV fixed width format for now. for IDs, see client::FileFormats.js
                                                         }).encode('utf_8'))
                     print("WebSockwet::onMessage bt-load-log completion confirmed")
-        except IOError:
-            print("GA-File not found: " + os.path.dirname(os.path.abspath(__file__)) + "/" + req["path"])
-            # throw e
+        except IOError as e:
+            print("Log-File not found: " + os.path.dirname(os.path.abspath(__file__)) + os.path.sep + req["path"])
+            print(e)
 
     #----------------------------------------------------------------------------
     def bt_save_ga(self, req):     # TODO this is an inherently bad idea, we really need a data base
-        print("Trying to save ",req["path"])
+        #print("Websocket:Trying to save ",req["path"])
         gaText = req["gatext"]
-        fname  = req["path"]
+        fpath = get_absolute_path(req["path"])
         try:
-                with open (fname,"w") as f:
+                with open (fpath,"w") as f:
                         f.write(gaText)
                 respStr = "Saved OK"
-        except:
-                respStr += "Error writing GA to " + fname + ".txt\n"
+        except Exception as e:
+                respStr += "Error writing GA to " + req["gatext"] + ".txt\n"
                 self.sendMessage(json.dumps({"type": "bt-save-resp", "message": str(respStr)}).encode('utf_8'))
-
+                print("Could not save GA")
+                print(e)
     #----------------------------------------------------------------------------
     def save(self, req):
             saveDir = "../../../resources/db/"
@@ -293,22 +310,30 @@ class MyWebsocket(WebSocketServerProtocol):
                 treo.close()
 ################################################################################
 if __name__ == "__main__":
-    """ Start the websocket """
-    websocket_port = 4001
+    from pathlib import Path  # Python 3.6+ only
+    from dotenv import load_dotenv
+    import os
+    cwd = os.path.dirname(os.path.realpath(__file__)) #/..../napkin/packages_src/bt/bt/
+    env_path = cwd +  '/../.env'
+    load_dotenv(dotenv_path=env_path)
+    
+    
+    websocket_host = os.getenv('NAPKIN_SOCK_SRV_HOST')
+    websocket_port = int(os.getenv('NAPKIN_SOCK_SRV_PORT'))
     try:
         import asyncio
     except ImportError:
         import trollius as asyncio
     loop = asyncio.get_event_loop()
 
-    factory = WebSocketServerFactory("ws://127.0.0.1:" + str(websocket_port))
+    factory = WebSocketServerFactory(f"ws://{websocket_host}:{websocket_port}")
     factory.protocol = MyWebsocket
-    coro = loop.create_server(factory, '0.0.0.0', websocket_port)
+    coro = loop.create_server(factory, '0.0.0.0', websocket_port)  #TODO: Not sure what 0.0.0.0 means....
     server = loop.run_until_complete(coro)
 
     #os.spawnl(os.P_NOWAIT, 'python','./auto_updater.py')
     try:
-        print("The websocket is up'n'running on port " + str(websocket_port) + "...")
+        print(f"The websocket server is up'n'running on port {websocket_port}" )
         loop.run_forever()
     except KeyboardInterrupt:
         pass

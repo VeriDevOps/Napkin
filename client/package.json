@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "npm run dev-client | npm run dev-server | npm run dev-auto-update-server",
     "dev-client": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --open --hot",
-    "dev-server": "python3 ../server/server.py",
-    "dev-auto-update-server": "python ../packages_src/bt/bt/auto_updater.py",
+    "dev-server": "python3 ../server/sock_srv.py",
+    "dev-auto-update-server": "python3 ../packages_src/bt/bt/auto_updater.py",
     "build": "node node_modules/cross-env/dist/bin/cross-env.js NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules"
   },
   "dependencies": {
