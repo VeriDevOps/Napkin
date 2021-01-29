@@ -20,9 +20,7 @@ const { argv } = require('process');
 //---------------------------------------------------------------------------------
 //                            Parameters and Globals  
 //---------------------------------------------------------------------------------
-
-var default_main_definition_file = "/Users/dfm01/Dropbox/BTSAGA-Ind-Eval/C30/Safe/main_definitions.ga" ;
-var default_main_definition_src  = fs.readFileSync(default_main_definition_file, 'utf8');
+ 
 var debug = false;
 
 //---------------------------------------------------------------------------------
@@ -184,9 +182,7 @@ if (require.main === module) {
 
     load_and_set_context( log_file, main_defs,main_defs_src)
         ga_files.forEach(ga_file => {
-            let res = load_and_evaluate(log_file, ga_file,
-                            default_main_definition_file,
-                            default_main_definition_src);
+            let res = load_and_evaluate(log_file, ga_file);
             results.push(res);
         
     })
