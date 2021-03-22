@@ -19,14 +19,14 @@ This README contains instruction for both Linux and Windows, so please be patien
 ````
     sudo apt-get update
     sudo apt-get install --yes curl
-    curl --silent --location https://deb.nodesource.com/setup_8.x | sudo bash -
+    curl --silent --location https://deb.nodesource.com/setup_10.x | sudo bash -
 
     sudo apt-get install --yes nodejs
 
     sudo apt-get install --yes npm
 ````
 
- No longer necessary (I think) sudo npm install npm@5.7 -g
+ 
 
 # WINDOWS 
 * https://nodejs.org/en/.    10.16.3 LTS
@@ -70,8 +70,7 @@ For unknown reason, there is a npm_modules under
 
 ````
 There are also some "base" dependencies that needs to be installed with "npm install xxxxxxx"
-ARNT ! Kan du lägga till här vad du gör för att det ska funka. Vi har uppdaterat till nyare node.js efter dokumentet skrevs så man behöver inte backa till 5.7 längre...
-
+ 
 
 ## A note about Continuum Anaconda Environment  (Windows / Mac)
 MAC /WIN https://nodejs.org/en/download/current/
