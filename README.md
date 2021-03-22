@@ -14,6 +14,34 @@ It is currently under some heavy development and depends on another private repo
 ## Preparing the development environment
 This README contains instruction for both Linux and Windows, so please be patient and keep reading!
 # LINUX
+### Starting with a newly installed ubuntu 20 LTS :
+
+````
+    sudo apt update
+    
+    sudo apt install --yes git
+    
+    sudo apt install --yes npm
+    
+    git clone https://danielFlemstrom@bitbucket.org/danielFlemstrom/napkin.git
+    
+    cd napkin/client
+    sudo npm install npm 6.9.0
+    
+    sudo apt install npm
+    
+    sudo npm cache clean -f
+    sudo npm install -g n
+    
+    sudo n 10.16.3
+    node -v
+   
+    sudo npm install -g npm@6.9.0
+    npm -v
+    
+    
+````
+
 ### Starting with a newly installed ubuntu 16 LTS :
 
 ````
