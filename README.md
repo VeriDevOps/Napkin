@@ -1,35 +1,83 @@
-# NAPKIN
-NAPKIN is a fork/continuation of the SCANIA+RISE project SAGA https://github.com/scania/saga.git 
+# Wiping your T-EARS with NAPKIN
+NAPKIN is a fork/continuation of the SCANIA+RISE project SAGA https://github.com/scania/saga.git <br> Napkin is currently(always) under heavy development and depends on another private repo, btsaga. As soon as these dependencies have been resolved, the repository will be opened for the public. 
 
-It is currently under some heavy development and depends on another private repo, btsaga. As soon as these dependencies have been resolved, the repository will be opened for the public. 
-### Breaking news
-2021-01-28 Code break-out from research computer. You will now have to install the package bt from packages_src
 
-```
+
+## Running Napkin Without Back-End Servers:
+
+    git clone https://danielFlemstrom@bitbucket.org/danielFlemstrom/napkin.git
+
+Double click on the file: `~/napkin/dist/index.html`     
+
+
+
+## Breaking news
+2021-01-28 We have done a huge code break-out to collect the company specific parts in packages. You will now have to install the package bt from packages_src. If you use conda this is how to do it. 
+
+
     cd  <.....>napkin/packages_src/bt
     conda develop .
 
-```
 
 ## Preparing the development environment
 This README contains instruction for both Linux and Windows, so please be patient and keep reading!
 # LINUX
 ### Starting with a newly installed ubuntu 20 LTS :
+Install anaconda for python and environments from https://linuxize.com/post/how-to-install-anaconda-on-ubuntu-20-04/
+Following is a copy of the instructions in above link:
 
-````
+    wget -P /tmp https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+    bash /tmp/Anaconda3-2020.02-Linux-x86_64.sh
+
+You will ned to answer yes and stuff to complete the previous command.<br>
+Close the terminal and open it again to get the PATH variable updates. <br>
+In this new window, create and set an environment (in below its called py38):    
+
+    conda create --name py38 python=3.8 --yes
+    source activate py38
+
+    conda install -c conda-forge autobahn --yes
+    conda install -c conda-forge bottle   --yes
+    conda install -c conda-forge python-dotenv --yes
+
+
+Ubuntu Packages:
+
     sudo apt update
-    
-    sudo apt install --yes git
-    
-    sudo apt install --yes npm
-    
+    sudo apt upgrade --yes
+    sudo apt install --yes git 
+    sudo apt install --yes npm 
+
+Clone the Napkin Repository and Install the library
+
     git clone https://danielFlemstrom@bitbucket.org/danielFlemstrom/napkin.git
     
-    cd napkin/client
-    sudo npm install npm 6.9.0
     
-    sudo apt install npm
+Install the company specific Server Packages:
     
+    conda develop ~/napkin/packages_src/bt
+
+Create a dot-env file 
+  
+    cd ~/napkin
+    cp example.env .env
+
+Edit above file to make it work for your company environment. 
+
+Install the npm packages
+
+    cd ../client
+    npm install
+
+You will see alot of warnings. This is because napkin neets to be updated to newer modules. 
+
+Run the environment
+
+    npm run dev
+
+
+Some strange patching hope it is not required
+
     sudo npm cache clean -f
     sudo npm install -g n
     
@@ -39,35 +87,22 @@ This README contains instruction for both Linux and Windows, so please be patien
     sudo npm install -g npm@6.9.0
     npm -v
     
-    
-````
-
-### Starting with a newly installed ubuntu 16 LTS :
-
-````
-    sudo apt-get update
-    sudo apt-get install --yes curl
-    curl --silent --location https://deb.nodesource.com/setup_10.x | sudo bash -
-
-    sudo apt-get install --yes nodejs
-
-    sudo apt-get install --yes npm
-````
-
- 
 
 # WINDOWS 
 * https://nodejs.org/en/.    10.16.3 LTS
 * Install python (e.g., Anaconda as shown further down)
  
 # COMMON
+Follow these steps to install anaconda on the machine
+https://linuxize.com/post/how-to-install-anaconda-on-ubuntu-20-04/
+
 ```
   npm install style-loader --save
-  sudo apt-get install --yes git
 
-  sudo apt install python3-pip3
-  sudo pip3 install autobahn
-  sudo pip3 install bottle
+  sudo apt install --yes python3-pip
+  pip3 install autobahn
+  pip3 install bottle
+  pip3 install python-dotenv
 ````
 # Cloning the source 
 
@@ -82,9 +117,8 @@ Give your personal access token instead of the password if you use 2FA. If you d
   cd client 
   npm install .
   npm install bootstrap-vue@1.5.0
-  npm run dev
-  npm install  webpack@^1.0.0
-  npm install webpack@^2.2.0
+  
+
 
 ```
 
@@ -98,7 +132,13 @@ For unknown reason, there is a npm_modules under
 
 ````
 There are also some "base" dependencies that needs to be installed with "npm install xxxxxxx"
+
  
+```` 
+  npm install  webpack@^1.0.0
+  npm install webpack@^2.2.0
+
+````
 
 ## A note about Continuum Anaconda Environment  (Windows / Mac)
 MAC /WIN https://nodejs.org/en/download/current/
@@ -106,20 +146,19 @@ MAC /WIN https://nodejs.org/en/download/current/
  * npm v5.6.0 to /usr/local/bin/npm
 	
 	
- 
-	
 
 If using Continuums Anaconda Navigator environment for python:
 https://www.anaconda.com/download/
 
 py3k is the environment with python3 i have created with
 ```
-    conda  create --name py3k python=3.5
+    conda  create --name py3k python=3.8
 
     source activate py3k
     conda install pip
     pip install autobahn
     pip install bottle
+    pip install python-dotenv
 ```
 
 
