@@ -992,7 +992,6 @@ export default {
       // If there is a ignoreleft, create an interval 
       // from 0 to ignoreleft and do a gray rectancle (as in invalid)
       // It would be elegant to have red hatches also. 
-      console.log("Plot.vue::highlightIgnoreLogPart xRange is ", JSON.stringify(xRange));
      
       if (this.commonData.hasOwnProperty("leftIgnore")){   
           let [left, right] = this.toDomXCoords([xRange[0],this.commonData.leftIgnore], domArea, xRange);
