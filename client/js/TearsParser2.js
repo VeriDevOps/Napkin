@@ -921,7 +921,7 @@ SPEC: function(filename, graces, statements){
 
        
        delete moduleContext.allowMaxFail
-       delete moduleContext.rightIgnore
+       delete moduleContext.leftIgnore
        delete moduleContext.rightIgnore
        
 

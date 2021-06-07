@@ -75,6 +75,7 @@ constructor(elementName){
               failcolor : "rgba(100,0,0,0.8)",
               passcolor_int : "rgba(0,100,0,0.4)",
               failcolor_int : "rgba(100,0,0,0.4)",
+              ignore_color  : "rgba(0,0,0,1)",
 
               guardcolor_highlighted: "rgba(100,100,100,0.8)",
               passcolorh_ighlighted : "rgba(0,100,0,0.8)",
@@ -662,6 +663,9 @@ draw(){
             }
 
         }//valid ga data.
+        if(this.ga.current_evaluation){
+          this.draw_ignore_shadow()
+        }
       ctx.restore();
 
       if(this.legend.showname){
@@ -774,7 +778,17 @@ draw_ga_info_interval(){
         if(guard_debug)console.log("Pass region between ",passes[i][0], passes[i][1]);
      }
    } //passes
+
+  
 }//_draw_gainfo_interval
+draw_ignore_shadow(){
+  if(this.ga.current_evaluation.hasOwnProperty("leftIgnore")){
+    this._draw_region( _getXmin(), Math.min( _getXmax(), this.ga.current_evaluation.leftIgnore), this.ga.ignore_color);
+   }//leftIgnore
+   if(this.ga.current_evaluation.hasOwnProperty("rightIgnore")){
+    this._draw_region(this.ga.current_evaluation.rightIgnore,   _getXmax() , this.ga.ignore_color);
+   }//leftIgnore
+}
 draw_ga_info_event(){
     if (this.ga.current_evaluation == null || this.ga.show == false){
       return;
