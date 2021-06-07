@@ -920,7 +920,8 @@ SPEC: function(filename, graces, statements){
        var fname = filename.sourceString;   //TODO: filename is not used
 
        
-       delete moduleContext.leftIgnore
+       delete moduleContext.allowMaxFail
+       delete moduleContext.rightIgnore
        delete moduleContext.rightIgnore
        
 
