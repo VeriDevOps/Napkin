@@ -134,37 +134,38 @@ var tears = require('./Tears.js');
              exampleFile:null,
              gaFile:null,
 
-             initialGA: "ignore > 180 \nwhile select(A,B,C) >0",
-          //   initialGA: "while count(rising_edge([[70,71],[72,73],[150,151],[160,161]]),[[59,80],[100,158]])>0",
+            //initialGA: "ignore > 180 \nwhile select(A,B,C) >0",
+            //initialGA: "while count(rising_edge([[70,71],[72,73],[150,151],[160,161]]),[[59,80],[100,158]])>0",
 
-            //  initialGA: "def events A = [15,30,35,45]\n def events B= [10,20,25,40]\n const C = 30\n while between(A,C)",
-           //
-            // initialGA: "def P = [1s,10s,20s] def I = [[0s,15s],[16s,30s]] while count ( P,I ) > 0",
-          //  initialGA:"while bitmask(4,A)==4",
+            initialGA: "def intervals A = [[15,30],[35,45]]\ndef intervals B = [[10,20],[40,44]]\n\nwhile A shall B",
+            //initialGA: "def events A = [15,30,35,45]\n def events B= [10,20,25,40]\n const C = 30\n while between(A,C)",
+            //
+            //initialGA: "def events P = [1s,10s,20s] def intervals I = [[0s,15s],[16s,30s]] while count ( P,I ) > 0",
+            //  initialGA:"while bitmask(4,A)==4",
             //   initialGA:"while abs(A)>5",
-          // NOT finished with this   initialGA:"when sequence [10s,12s] store timepoint as t0-> [15s] within 10s ->[80s] within 100s shall B at t0 - B >10",
-        //     initialGA:"when [0s] shall sequence SelectorLever>0 for 1s within 50s -> [15s,16s,17s] within 16s ->[80s] within 100s within 120s", // Should be[80]
+            // NOT finished with this   initialGA:"when sequence [10s,12s] store timepoint as t0-> [15s] within 10s ->[80s] within 100s shall B at t0 - B >10",
+            //     initialGA:"when [0s] shall sequence SelectorLever>0 for 1s within 50s -> [15s,16s,17s] within 16s ->[80s] within 100s within 120s", // Should be[80]
 
-      //  initialGA:"when sequence    [10s,20s,50s]                   store timepoint as start \n              -> [15s,25s,30s,53s] within 16s    store timepoint as mid\n              -> [30s,35s,80s] within 100s\
-       //store timepoint as end\nwhile between(start,end)",
+            //  initialGA:"when sequence    [10s,20s,50s]                   store timepoint as start \n              -> [15s,25s,30s,53s] within 16s    store timepoint as mid\n              -> [30s,35s,80s] within 100s\
+            //store timepoint as end\nwhile between(start,end)",
               //initialGA:"/* should issue warning*/ while [[10s,20s]] shall between([1s],[2s])",
-          //   initialGA: "while between([10s,20s,30s] , [15s,16s,25s,30s,50s])  shall Gear_Mode_SCANIA>1.5",
-          //   initialGA: "while count([10s,20s,27s,30s,31s,32s,33s,34s,40s] , [[1s,25s],[30s,60s]]) >0 ",
-        //     initialGA: "def A =   [10s, 20s,     30s,    45s ,   100s] \ndef B =    [12s,  23s,25s,   40s,              150s]\ndef C = [10s,   20s,        35s,         50s]\nwhen A and [[-10s,1000s]] shall  B within 10s ",
-         //initialGA: "def A =   [10s,13s, 20s,     30s,    45s ,   100s] \n"
-        //           + "def B =    [12s,  23s,25s,   40s,              150s]\n"
-        //           + "def C = [10s,   20s,        35s,         50s]\n"
-        //           +  "when [9s,30s] shall (sequence "
-        //           +                        "A within 10s store timepoint as start\n\t"
-        //           +                      "->B within 20s \n\t"
-        //           +                      "->C within 10s store timepoint as end) within 100s",
-                 //initialGA: "const kalle = 12 when [2s, 10s, 40s]",
-              //initialGA: " when (SelectorLever>0 and SelectorLever>0.5) for 20s  or (SelectorLever>2 for 20s)  ",//shall SelectorLever==0 for 2s within 40s ",
-             //  initialGA: "while (SelectorLever>0)  or (SelectorLever>5) ",//shall SelectorLever==0 for 2s within 40s ",
-            //  initialGA: " when [[4s,20s]] for 2s shall[25s] within 30s   ",
-            //    initialGA: "def kalle SelectorLever>0 while kalle shall SelectorLever==0 within 40s ",
-           //   initialGA: "def kalle rising_edge(SelectorLever>0) when kalle shall SelectorLever==0 for 2s within 40s ",
-              // initialGA: 'while fb_btn_pressed == ready_to_run',
+            //   initialGA: "while between([10s,20s,30s] , [15s,16s,25s,30s,50s])  shall Gear_Mode_SCANIA>1.5",
+            // initialGA: "while count([10s,20s,27s,30s,31s,32s,33s,34s,40s] , [[1s,25s],[30s,60s]]) >0 ",
+            //  initialGA: "def events A =   [10s, 20s,     30s,    45s ,   100s] \ndef events B =    [12s,  23s,25s,   40s,              150s]\ndefevents C = [10s,   20s,        35s,         50s]\nwhen A and [[-10s,1000s]] shall  B within 10s ",
+            //initialGA: "def events A =   [10s,13s, 20s,     30s,    45s ,   100s] \n"
+            //           + "def events B =    [12s,  23s,25s,   40s,              150s]\n"
+            //           + "def events C = [10s,   20s,        35s,         50s]\n"
+            //           +  "when [9s,30s] shall (sequence "
+            //           +                        "A within 10s store timepoint as start\n\t"
+            //           +                      "->B within 20s \n\t"
+            //           +                      "->C within 10s store timepoint as end) within 100s",
+            //initialGA: "const kalle = 12 when [2s, 10s, 40s]",
+            //initialGA: " when (SelectorLever>0 and SelectorLever>0.5) for 20s  or (SelectorLever>2 for 20s)  ",//shall SelectorLever==0 for 2s within 40s ",
+            //initialGA: "while (SelectorLever>0)  or (SelectorLever>5) ",//shall SelectorLever==0 for 2s within 40s ",
+            //initialGA: " when [[4s,20s]] for 2s shall[25s] within 30s   ",
+            //initialGA: "def intervals kalle SelectorLever>0 while kalle shall SelectorLever==0 within 40s ",
+            //initialGA: "def kalle rising_edge(SelectorLever>0) when kalle shall SelectorLever==0 for 2s within 40s ",
+            //initialGA: 'while fb_btn_pressed == ready_to_run',
              //initialGA: "while SelectorLever > 0",
              //initialGA: "alias olle =  Gear_Mode_SCANIA const berit=1 alias elliot = GEARSOMFAN\nwhile olle > berit and Clutch_Mode_SCANIA != 10",
              //initialGA: "alias 'kalle anka' =  'red1_mdl_env/Model Root/Red1_MDL_Env/MDLUserInterface/Environment/MDL_PAR/ManualControl/v_Vehicle_Ref[m|s]/Value' \nwhile 'kalle anka' > 1",
@@ -178,7 +179,7 @@ var tears = require('./Tears.js');
              // initialGA: 'when\n\trising_edge(EngineSpeed > 1000)\n' +
              // 					 'shall\n\tTCOVehSpeed > 45\nwithin 3s',
              //EVEN MORE CHALLENGING (FUNCTION WITHIN DEF)
-             // initialGA: 'def kalle {\n\trising_edge(SelectorLever_Mode)\n}\n' +
+             // initialGA: 'def events kalle {\n\trising_edge(SelectorLever_Mode)\n}\n' +
              // 					 'when\n\tkalle\nshall\n\tTCOVehSpeed > 45\nwithin 3s',
              //INCORRECT INPUT
              // initialGA: 'when\n\trising_edge(EngineSpeed > 1000)\n' +
@@ -196,18 +197,18 @@ var tears = require('./Tears.js');
              // 					 'shall full_beam == 100',
              //Incorrect input
              // initialGA: 'when rising_edgge(EngineSpeed > 1000)',
-             // initialGA: 'def E_full_beam_ON {\n' +
+             // initialGA: 'def events E_full_beam_ON {\n' +
              // 					 '\trising_edge(fb_btn_pressed) and (ready_to_run == 1 and full_beam == 0)\n' + '}\n' +
              // 					 'where fb_btn_pressed == defined\n' +
              // 					 'when E_full_beam_ON\n' +
              // 					 'shall full_beam == 1 within 0.2 s',
              //VECS-DEMO, SLIDE 29
-          /*    initialGA: 'def E_full_beam_ON = \n' +
+          /*    initialGA: 'def intervals E_full_beam_ON = \n' +
                             '\trising_edge(pushbutton > 0) and\n' +
               							'\t(Head_light_full_beam_on == 0 and\n' +
               							'\tReadyToRun == 1)\n' +
 
-              						'def E_full_beam_OFF = \n' +
+              						'def intervals E_full_beam_OFF = \n' +
                           '\t(rising_edge(pushbutton > 0) or\n' +
                           '\tfalling_edge(ReadyToRun)) and (\n' +
               							'\tHead_light_full_beam_on == 1 and\n' +

@@ -919,10 +919,10 @@ SPEC = filename* Config* DefinesAndConstsAndAlias* ((identifier "=")? GuardedAss
 SPEC: function(filename, graces, statements){
        var fname = filename.sourceString;   //TODO: filename is not used
 
-       /*
+       
        delete moduleContext.leftIgnore
        delete moduleContext.rightIgnore
-       */
+       
 
        var res = statements.eval();
        // DEBUG TODO: this is a really nice feature though:
@@ -1003,8 +1003,8 @@ GracePeriodSpec:function(_fn, _end, timeout){
     }
   else{
     if(moduleContext.hasOwnProperty('rightIgnore')){
-      console.warn(errLocationFromNode(timeout) +
-      ' ^Rightward ignore already specified. You may want to check your main definitions file.');
+     /* console.warn(errLocationFromNode(timeout) +
+      ' ^Rightward ignore already specified. You may want to check your main definitions file.');*/
     }
     if(t<0){
       t = EvalContext.getInstance().getXmax() - t;
