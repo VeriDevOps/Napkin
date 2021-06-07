@@ -335,6 +335,7 @@ export default {
     },
     onContextMenu(e){
       e.stopPropagation();
+      console.log("Plot.vue::onContextMenu(e=",e,")");
       this.$refs.plotmenu.open(e);
      },
      onClickZ (range){
@@ -961,14 +962,17 @@ export default {
 
    },//G/A plotter.
     highlight() {
-        //  console.log("Plot.vue::highlight THIS COMMON DATA IS CURRENTLY ", JSON.stringify(this.commonData));
+      //console.log("Plot.vue::highlight THIS COMMON DATA IS CURRENTLY ", JSON.stringify(this.commonData));
+      //console.log("Plot.vue::highlight THIS  plotData IS CURRENTLY ",JSON.stringify(this.plotData));
+
       if(this.plotData.valid != undefined)
       this.highlightIntervals(this.plotData.valid, "rgba(255, 255, 102, 1)");
 
       this.highlightGuards();
       this.highLightPASS();
       this.highLightFAIL();
-      this.plotEventGA()
+      this.plotEventGA();
+      this.highlightIgnoreLogPart();
     },
   /*  highlightTimes(times, style) {
       if (times.length > 0) {
@@ -980,6 +984,27 @@ export default {
         }
       }
     },*/
+
+    highlightIgnoreLogPart() {
+      var xRange = this.graph.xAxisRange();
+      var domArea = this.graph.getArea();
+      // TODO:
+      // If there is a ignoreleft, create an interval 
+      // from 0 to ignoreleft and do a gray rectancle (as in invalid)
+      // It would be elegant to have red hatches also. 
+      console.log("Plot.vue::highlightIgnoreLogPart xRange is ", JSON.stringify(xRange));
+     
+      if (this.commonData.hasOwnProperty("leftIgnore")){   
+          let [left, right] = this.toDomXCoords([xRange[0],this.commonData.leftIgnore], domArea, xRange);
+          this.canvas.fillStyle = "rgb(1,1,2,1)";
+          this.canvas.fillRect(left, this.area.y, right - left, this.area.h);
+      }
+      if (this.commonData.hasOwnProperty("rightIgnore")){   
+          let [left, right] = this.toDomXCoords([this.commonData.rightIgnore,xRange[1]], domArea, xRange);
+          this.canvas.fillStyle = "rgb(1,1,2,1)";
+           this.canvas.fillRect(left, this.area.y, right - left, this.area.h);
+      }
+    },
     highlightIntervals(intervals, fillStyle) {
       var xRange = this.graph.xAxisRange();
       var domArea = this.graph.getArea();

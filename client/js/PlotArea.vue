@@ -194,14 +194,24 @@ export default {
             var self = this;
             var evalData = JSON.parse(evalDataStr);
 
+            //console.log("PlotArea.vue::on ga-evaluated ",evalDataStr);
             //console.log("PlotArea.vue::on ga-evaluated, now we should remove all plots(initial length, evalData) ",self.plotSpecificData.length,evalData);
 
             self.clearPlots();
-
-         
             //console.log("PlotArea.vue::on ga-evaluated (ENTER next tick), all plots should be gone (length)", self.plotSpecificData.length);
 
             self.commonData = evalData.times;
+            // If we have ignore or allow statements, add those options to the commonData
+            if(evalData.hasOwnProperty('leftIgnore')){
+                self.commonData.leftIgnore = evalData.leftIgnore;      
+            }
+            if(evalData.hasOwnProperty('rightIgnore')){
+                self.commonData.rightIgnore = evalData.rightIgnore;
+            }
+            if(evalData.hasOwnProperty('allowMaxFail')){
+                self.commonData.allowMaxFail = evalData.allowMaxFail;
+            }
+
             evalData.name   = evalData.exprStr;  //Backw compatibility
 
             if(self.plotSpecificData.length > 0)

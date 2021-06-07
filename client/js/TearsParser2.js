@@ -952,8 +952,9 @@ SPEC: function(filename, graces, statements){
             item.value.times.fail =  leftTrunc(item.value.times.fail,  moduleContext.leftIgnore);
             item.value.times.pass =  leftTrunc(item.value.times.pass,  moduleContext.leftIgnore);
             item.value.times.valid = leftTrunc(item.value.times.valid, moduleContext.leftIgnore);
+            item.value.leftIgnore = moduleContext.leftIgnore;
          });
-         res.leftIgnore = moduleContext.leftIgnore;
+         
 
        }
        if(moduleContext.hasOwnProperty('rightIgnore')){
@@ -962,8 +963,9 @@ SPEC: function(filename, graces, statements){
                 item.value.times.fail =  rightTrunc(item.value.times.fail,  moduleContext.rightIgnore);
                 item.value.times.pass =  rightTrunc(item.value.times.pass,  moduleContext.rightIgnore);
                 item.value.times.valid = rightTrunc(item.value.times.valid, moduleContext.rightIgnore);
+                item.value.rightIgnore = moduleContext.rightIgnore;
              });
-             res.rightIgnore = moduleContext.rightIgnore;
+            
        }
 
 
@@ -974,14 +976,14 @@ SPEC: function(filename, graces, statements){
            if (guards.length > 0 && Array.isArray(guards[0])){
              item.value.times.fail =   item.value.times.fail.filter(r => r[1] - r[0] >= moduleContext.allowMaxFail);
            }
+           item.value.allowMaxFail = moduleContext.allowMaxFail;
         });
-        res.allowMaxFail = moduleContext.allowMaxFail;
-    }
+       
+      }
 
       // END GENERAL POLICY
-
-
-       return res;
+    
+      return res;
 },
 Allow:function(_fn, timeout,_fail){
   var t = timeout.eval();
