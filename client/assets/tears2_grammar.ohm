@@ -17,7 +17,10 @@ Statements = (   EventDef | IntervalsDef | Constant | Alias | GA)*
  within = caseInsensitive<"within">
  without = caseInsensitive<"without">
  
- shall =  (caseInsensitive<"shall"> |caseInsensitive<"verify">)
+ shall =  (caseInsensitive<"shall"> | caseInsensitive<"then">)
+ verify = caseInsensitive<"verify">
+ given = caseInsensitive<"given">
+
  when = caseInsensitive<"when">
  sequence = caseInsensitive<"sequence">
  def = caseInsensitive<"def">
@@ -60,16 +63,18 @@ Statements = (   EventDef | IntervalsDef | Constant | Alias | GA)*
          | while                 | inf   | const   | intervals
          | shall                                   | sequence |                 ignore 
          |                                                            allow | fail
+         |given
+         |verify
 
 /*----------------------------------------------------------------------------*/
 GracePeriodSpec = ignore ("<"|">") Timeout
 Allow = allow Timeout fail
 /*----------------------------------------------------------------------------*/
-
-GA = ((identifier "=")? Config? GuardedAssertion)
+GivenContext = given IntervalGuard
+GA = ((identifier "=")? Config? GivenContext? GuardedAssertion)
 GuardedAssertion =
-          while IntervalGuard (shall IntervalAssertion)*    --intervalGA
-        | when  EventGuard    (shall EventsAssertion)*      --eventGA
+          while IntervalGuard (shall verify? IntervalAssertion)*    --intervalGA
+        | when  EventGuard    (shall verify? EventsAssertion)*      --eventGA
 
 Config = where BoolExpr
 

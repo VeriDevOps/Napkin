@@ -533,11 +533,17 @@ function create_within_intervals_from_intervals(S,tw){
 
 // sequences evaluated in the Assertions
 
-var moduleContext = {
+var moduleContext = {};
+function reset_moduleContext(){
+  moduleContext = {
+    currentGiven:undefined, // IFF the given then when syntax is used, this is the extra Interval Expression of the guard
     currentGA:undefined,   // Timebase for sub sequent expressions (assert and seq)
     usedSignals: [],       // All signal requests are collected during evaluation.
-    lastMainDef:null,      // Last succeeded evaluation of the main definition block
-};
+    lastMainDef:null      // Last succeeded evaluation of the main definition block
+  };
+}
+reset_moduleContext();
+
 function getLastMainBlockEvaluation(){
     if (moduleContext.lastMainDef)
       return moduleContext.lastMainDef
@@ -863,9 +869,8 @@ module.exports = {
 
     eval(matchResult) {
         constDefAlias = [];
-        moduleContext.usedSignals  = [];
-        moduleContext.currentGA = undefined;
-        moduleContext.lastMainDef = null
+        reset_moduleContext();
+        
         // Before any statements are evaluated, we check if
         // there is a default definition block that should be used
         let defBlock = EvalContext.getInstance().getDefaultDefinitionBlock();
@@ -927,12 +932,13 @@ SPEC = filename* Config* DefinesAndConstsAndAlias* ((identifier "=")? GuardedAss
 */
 SPEC: function(filename, graces, statements){
        var fname = filename.sourceString;   //TODO: filename is not used
-
-       
+        
+       /* replaced by reset_moduleContext, 
+       TODO: remove this block if it all works
        delete moduleContext.allowMaxFail
        delete moduleContext.leftIgnore
        delete moduleContext.rightIgnore
-       
+      */ 
 
        var res = statements.eval();
        // DEBUG TODO: this is a really nice feature though:
@@ -1053,10 +1059,18 @@ Statements:function(statements){
   return GA_evaluations
 },
 /*
-GA = ((identifier "=")? Config? GuardedAssertion)
+   GivenContext = given IntervalGuard
 */
-GA:function( identifier, _eq, config, guardedAssertion){
+GivenContext:function( _given, interval_guard){
+  return  interval_guard.eval();
+},
+/*
+GA = ((identifier "=")? Config? GivenContext? GuardedAssertion)
+*/
+GA:function( identifier, _eq, config, given_context, guardedAssertion){
   var name = evalOptional(identifier,"");
+  var given_context = evalOptional(given_context,"");
+  moduleContext.currentGiven = given_context;
   var include = evalOptional(config,true);
   if(include)
        return {
@@ -1224,13 +1238,24 @@ Alias:function(_alias, identifier, _ew, body){
 
 },
 /*
- GuardedAssertion =  while IntervalGuard (shall IntervalAssertion)* --intervalGA
+ GuardedAssertion =  while IntervalGuard (shall verify? IntervalAssertion)* --intervalGA
 */
-GuardedAssertion_intervalGA: function(when, guard, shall,assertion) {
+GuardedAssertion_intervalGA: function(_when, guard, _shall,_verify, assertion) {
     moduleContext.currentGA = undefined;
     moduleContext.usedSignals = [];
     var GE = guard.eval();
-    var G = GE.value;
+    var G = [];
+    var plots = [];
+    //console.log("while Guard               evaluated to:",JSON.stringify(GE.value));
+    //console.log("And the extra given Guard evaluated to:",JSON.stringify(moduleContext.currentGiven.value));
+    // If the given then when syntax is used, the guard and given context are "and"ed togehter
+    if (moduleContext.currentGiven != undefined){
+      G = operators.and(GE.value,moduleContext.currentGiven.value);
+      if (typeof (moduleContext.currentGiven.plots != 'undefined') ) plots.concat(moduleContext.currentGiven.plots);
+    } 
+    else{
+     G = GE.value;
+    }
     moduleContext.currentGA ={G:G};
     var retVal = {times: {
                valid: G,
@@ -1239,10 +1264,10 @@ GuardedAssertion_intervalGA: function(when, guard, shall,assertion) {
                guards:[],
                assertions:[],
                signals:moduleContext.usedSignals};
-
-    if (GE.plots != undefined){
-       retVal.guards = GE.plots;
-    }
+    
+    if (typeof GE.plots != 'undefined') plots.concat(GE.plots);
+    retVal.guards = plots;
+    
   //  console.log("TEARS-2:GuardedAssertion_intervalGA Guard Evaluated to ",
   //               JSON.stringify(GE));
 
@@ -2487,15 +2512,29 @@ TimeFilter_atMost: function(_st,to) {
 /*=============================== EVENT ======================================*/
 /*
  GuardedAssertion =
-                   | when  EventGuard    (shall EventsAssertion)*      --eventGA
+                   | when  EventGuard    (shall verify? EventsAssertion)*      --eventGA
 */
-GuardedAssertion_eventGA: function(_when, guard, _shall,assertion) {
+GuardedAssertion_eventGA: function(_when, guard, _shall, _verify, assertion) {
 
     //console.log("TEARS-2:GuardedAssertion_GuardedAssertion_eventGA");
-    moduleContext.currentGA = undefined;
-    moduleContext.usedSignals = [];
     var GE = guard.eval();
-    var G = GE.value;
+    var G = [];
+    var plots    = [];
+    //console.log("Current Event Guard is ",G);
+    //console.log("Current extra given evaluation is",moduleContext.currentGiven);
+    if (moduleContext.currentGiven != undefined){
+      var SR = moduleContext.currentGiven.value;
+      G = operators.and(GE.value,SR);
+      //console.log("resulting Guard           evaluated to:",JSON.stringify(res));
+      if (typeof moduleContext.currentGiven.plots != 'undefined'){
+        plots = moduleContext.currentGiven.plots;
+      }
+    } 
+    else{
+     G = GE.value;
+    }
+
+
     moduleContext.currentGA ={G:G};
     var retVal = {times: {
                valid: G,
@@ -2509,10 +2548,11 @@ GuardedAssertion_eventGA: function(_when, guard, _shall,assertion) {
     var Ppass    = [];
     var Pfail    = [];
     var Pignored = []; // Events in within period that is not the first one.
-    var plots    = [];
-    if (typeof GE.plots != 'undefined'){
-      retVal.guards = GE.plots;
-    }
+   
+    if (typeof GE.plots != 'undefined') plots.concat(GE.plots);
+     
+    retVal.guards = plots;
+    
     //console.log("TEARS-2:GuardedAssertion_eventGA Guard Evaluated to ",JSON.stringify(GE));
 
     // TODO, Refuse more than one shall intervallassertion
