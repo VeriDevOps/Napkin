@@ -335,6 +335,15 @@ function resample_signal_unitTest(){
 var S = {values:     [0,  5, -3,  9,  -3,  15,   0],
          xAxis :     [0, 20, 60, 80, 110, 130, 260]}
 var P = [];
+
+    P.push({S  :S,
+            P  : [],
+            exp: []}); // Edge case
+    
+    P.push({S  :[],
+      P  :     [1, 10, 20, 55, 61, 100, 131, 261],
+      exp:       []}); // Edge case.
+
     P.push({S  :S,
             P  :     [1, 10, 20, 55, 61, 100, 131, 261],
             exp:       [0  ,0,  5,  5,   -3,  9, 15,]}); // Last point should have been cut off.
@@ -357,7 +366,7 @@ var P = [];
                    exp:    [0, 0,  5, -3,  15,   0]});
 */
 P.forEach(test => {
-  var res = resample_signal(S,test.P);
+  var res = resample_signal(test.S,test.P);
   var pass = true;
   if(res.length == test.exp.length){
   for (var i = 0; i < res.length; i++) {
@@ -1475,7 +1484,7 @@ IntervalsExpr_logop : function(signal1, op, signal2){
           start = timeline[i];
         }// else we are already in an interval.
 
-       } else { // End the current interval.
+    } else { // End the current interval.
            if(start == undefined)
             continue; // already in "non-interval"
             //console.log("Ending interval at ",i)
