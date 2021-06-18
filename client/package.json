@@ -23,7 +23,8 @@
     "dygraphs": "^2.1.0",
     "events": "^3.1.0",
     "jasmine-jquery": "^2.1.1",
-    "npm": "^5.10.0",
+    "node": "^10.16.3",
+    "npm": "^6.9.0",
     "npm-collect": "^1.0.5",
     "ohm-js": "^0.14.0",
     "raw-loader": "^0.5.1",
@@ -56,7 +57,7 @@
     "vue-loader": "^14.2.4",
     "vue-template-compiler": "^2.6.11",
     "webpack": "^4.41.6",
-    "webpack-cli": "3.3.5",
+    "webpack-cli": "^3.3.5",
     "webpack-dev-server": "^3.11.2"
   },
   "babel": {

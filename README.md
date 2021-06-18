@@ -5,6 +5,9 @@ NAPKIN is a fork/continuation of the SCANIA+RISE project SAGA https://github.com
 
 ## Running Napkin Without Back-End Servers:
 
+    sudo apt-get update
+    sudo apt-get upgrade --yes
+    sudo apt-get install git --yes
     git clone https://danielFlemstrom@bitbucket.org/danielFlemstrom/napkin.git
 
 Double click on the file: `~/napkin/dist/index.html`     
