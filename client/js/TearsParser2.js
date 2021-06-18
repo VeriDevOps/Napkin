@@ -539,10 +539,10 @@ function reset_moduleContext(){
     currentGiven:undefined, // IFF the given then when syntax is used, this is the extra Interval Expression of the guard
     currentGA:undefined,   // Timebase for sub sequent expressions (assert and seq)
     usedSignals: [],       // All signal requests are collected during evaluation.
-    lastMainDef:null      // Last succeeded evaluation of the main definition block
+    lastMainDef:null      // Last succeeded evaluation of the main definition block  
   };
 }
-reset_moduleContext();
+reset_moduleContext();  // TODO: This should not be necessary to do since it is reset each time it is evaluated. 
 
 function getLastMainBlockEvaluation(){
     if (moduleContext.lastMainDef)
@@ -1042,14 +1042,17 @@ Statements:function(statements){
   // User defined functions (you can create a def that uses an alias)
   // That alias can be redefined (effectively parameterizing the def)
 
-  var GA_evaluations = []; // name, config, ga-eval
+  var GA_evaluations = []; // name, config, ga-eval, evaltime
   statements.children.forEach(item => {
     if (item.ctorName !== 'GA'){
       item.eval();
     }else {
       // If it is a GA statement, we evaluate it and save the result if
       // config rule does not prevent it.
-      var res  = item.eval()
+      let start_time = Date.now();
+      var res  = item.eval();
+      res.evaltime = Date.now() - start_time;
+       
       GA_evaluations.push(res);
     }
   });
@@ -1069,8 +1072,9 @@ GA = ((identifier "=")? Config? GivenContext? GuardedAssertion)
 */
 GA:function( identifier, _eq, config, given_context, guardedAssertion){
   var name = evalOptional(identifier,"");
-  var given_context = evalOptional(given_context,"");
+  var given_context = evalOptional(given_context,undefined);
   moduleContext.currentGiven = given_context;
+  //console.log("Given context is ",moduleContext.given_context)
   var include = evalOptional(config,true);
   if(include)
        return {
@@ -1086,6 +1090,9 @@ GA:function( identifier, _eq, config, given_context, guardedAssertion){
    }
 },
 Config:function(_where, expr){
+  return expr.eval();
+},
+BoolExpr_para:function(_lp, expr,_rp){
   return expr.eval();
 },
 BoolExpr_conj:function(lhs,op,rhs){
@@ -1241,8 +1248,6 @@ Alias:function(_alias, identifier, _ew, body){
  GuardedAssertion =  while IntervalGuard (shall verify? IntervalAssertion)* --intervalGA
 */
 GuardedAssertion_intervalGA: function(_when, guard, _shall,_verify, assertion) {
-    moduleContext.currentGA = undefined;
-    moduleContext.usedSignals = [];
     var GE = guard.eval();
     var G = [];
     var plots = [];
