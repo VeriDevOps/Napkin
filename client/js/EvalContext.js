@@ -476,9 +476,18 @@ self.updateRange();
     //console.log("EvalContext.js::creating new signal ", JSON.stringify(newSignal));
     let self = this;
     let sigEntry = newSignal
+    // Handle some old format inconsistencies
+    if ((sigEntry.newName === undefined) && (sigEntry.name === undefined) && (sigEntry.pretty_print !== undefined)){
+      sigEntry.newName = sigEntry.pretty_print;
+      sigEntry.name    = sigEntry.pretty_print;
+    }
     if (sigEntry.newName === undefined){
+      sigEntry.newName = sigEntry.name;
+    }
+    if (sigEntry.name === undefined){
       sigEntry.name = sigEntry.newName;
     }
+
     sigEntry.shortName  = self.getShortName(sigEntry.newName); // NOTE, we can only shorten uniqe namnes ( add * if not in OnSignalListUpdated )
     sigEntry.timestamps = self.timestamps;       // All signals get the same timestamps
     if(self.signals == undefined)
