@@ -824,7 +824,8 @@ var options ={};
               options:options,
               dygraph:{valueRange:[0,3]}
              }];
-if(typeof Pv1E.plots != 'undefined') plots = plots.concat(Pv1E.plots);
+if(typeof Pv1E.plots != 'undefined') 
+    plots = plots.concat(Pv1E.plots);
 if(traceSeq){
   console.log("TearsParser2.js::evaluate_transition OUT: ",
                JSON.stringify({failTraces:fails, passes:passes,
@@ -912,6 +913,7 @@ module.exports = {
 
     match(expr) {
         //console.log("TearsParser.js::match() " + JSON.stringify());
+        //console.log("TearsParser.js::match(Intervals) ", JSON.stringify(grammar2.match(expr,'Intervals')))
       return grammar2.match(expr);
     }
 }//exports
@@ -1254,9 +1256,11 @@ GuardedAssertion_intervalGA: function(_when, guard, _shall,_verify, assertion) {
     //console.log("while Guard               evaluated to:",JSON.stringify(GE.value));
     //console.log("And the extra given Guard evaluated to:",JSON.stringify(moduleContext.currentGiven.value));
     // If the given then when syntax is used, the guard and given context are "and"ed togehter
-    if (moduleContext.currentGiven != undefined){
+    if (typeof moduleContext.currentGiven != 'undefined'){
       G = operators.and(GE.value,moduleContext.currentGiven.value);
-      if (typeof (moduleContext.currentGiven.plots != 'undefined') ) plots.concat(moduleContext.currentGiven.plots);
+      if (typeof moduleContext.currentGiven.plots != 'undefined' ){ 
+        plots = plots.concat(moduleContext.currentGiven.plots);
+      }
     } 
     else{
      G = GE.value;
@@ -1270,7 +1274,8 @@ GuardedAssertion_intervalGA: function(_when, guard, _shall,_verify, assertion) {
                assertions:[],
                signals:moduleContext.usedSignals};
     
-    if (typeof GE.plots != 'undefined') plots.concat(GE.plots);
+    if (typeof GE.plots != 'undefined')
+      plots =  plots.concat(GE.plots);
     retVal.guards = plots;
     
   //  console.log("TEARS-2:GuardedAssertion_intervalGA Guard Evaluated to ",
@@ -2431,9 +2436,9 @@ SignalFunction_select:function(_fname,_lp,control,_comm1,signal1,_comm2,signal2,
                   //  dygraph:{valueRange:[0,4]}
                   }];
         // Chain input arg plots
-        if (typeof SCE.plots != 'undefined') plots.concat(SCE.plots);
-        if (typeof S1E.plots != 'undefined') plots.concat(S2E.plots);
-        if (typeof S2E.plots != 'undefined') plots.concat(S2E.plots);
+        if (typeof SCE.plots != 'undefined') plots =  plots.concat(SCE.plots);
+        if (typeof S1E.plots != 'undefined') plots = plots.concat(S2E.plots);
+        if (typeof S2E.plots != 'undefined') plots = plots.concat(S2E.plots);
 
 
     return {type:"Signal",
@@ -2554,7 +2559,7 @@ GuardedAssertion_eventGA: function(_when, guard, _shall, _verify, assertion) {
     var Pfail    = [];
     var Pignored = []; // Events in within period that is not the first one.
    
-    if (typeof GE.plots != 'undefined') plots.concat(GE.plots);
+    if (typeof GE.plots != 'undefined') plots = plots.concat(GE.plots);
      
     retVal.guards = plots;
     
