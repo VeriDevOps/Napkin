@@ -8,7 +8,7 @@ var TearsHighlightRules = function() {
 
     var keywordMapper = this.createKeywordMapper({
         "keyword.control":
-            "when while shall " +
+            "when while given then when shall " +
             "within for def alias const",
         "constant.language":
             "true false inf ",
