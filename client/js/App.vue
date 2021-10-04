@@ -34,11 +34,16 @@
                     <b-tab title="Signal Editor" active>
                              <signaleditor2></signaleditor2>
                      </b-tab>
-
-                    <b-tab title="T-EARS Unit Tests" style="background:white;width:100%">
-                        <unittest></unittest>
+                    <b-tab title="Main Definitions" style="background:white;width:100%;overflow:hidden;">
+                        <maindefview></maindefview>
                     </b-tab>
+                    
+                    <b-tab id="help-pane4" title="Help(EARS)" style="background:white;max-heigth:300px;height:300px;overflow:scroll;"  >
+                      <h2> Mapping EARS Requirements to T-EARS Boilerplates</h2>
+                      <img src="./help_images/patterns.png" width=80% /><hr>
+                    
 
+                   </b-tab>
 
                     <b-tab id="help-pane1" ref="help-panel1" title="Help(State)" style="background:white;max-heigth:300px;height:300px;overflow:scroll;"  >
 
@@ -46,8 +51,11 @@
 
                       <h2> State-driven Guarded Assertion </h2>
                       <h5> Allowed Patterns </h5>
-                      <code> 'Ex-1' = while RG shall RA </code><br>
-                      <code>'Ex-2' = while RG shall RA within t s  </code>
+                      G = Guard Intervals, A = Assertion Intervals, and  t,tf,tw = Timout<br>
+                      <code> &rsquo;Bp-1&rsquo; = while true shall &lt;system response state A&gt;</code><br>
+                      <code>&rsquo;Bp-2&rsquo; = while &lt;system state G &gt; shall &lt;system response state A&gt; within t</code><br>
+                      <code>&rsquo;Bp-2s&rsquo; = while &lt;system state G &gt; shall &lt;system response state A&gt; </code>// (Special case t==0) <br>
+        
 
                       <table class="tg">
                         <tr>
@@ -148,12 +156,13 @@
 
                         <h2> Event-driven Guarded Assertion </h2>
                         <h5> Allowed Patterns </h5>
-                        <code> // P = Events, R = Intervals, tw = Timout</code><br>
-                        <code>// G = Guard, A = Assertion</code><br>
-                        <code>'Case-1' = when PG shall RA</code><br>
-                        <code>'Case-2' = when PG shall PA within tw </code><br>
-                        <code>'Case-3' = when PG shall RA for tf within tw</code><br>
-                        <code>'Case-4' = when PG shall RA within tw for tf</code><br>
+                         G = Guard, A = Assertion, and t,tf,tw = Timout<br>
+                        <code>  &rsquo;Bp-3&rsquo; = when &lt;events G&gt; shall &lt;system response state A&gt; within t</code><br>
+                       <code>  &rsquo;Bp-3s&rsquo; = when &lt;events G&gt; shall &lt;system response state A&gt;</code> // (Special Case t==0) <br>
+                        <code>  &rsquo;Bp-4&rsquo; = when &lt;events G&gt; shall &lt;response events A&gt; within t</code><br>
+                        <code>  &rsquo;Bp-5&rsquo; = when &lt;events G&gt; shall &lt;system response state A&gt; for tf within tw</code> //( Response should be <em>completed</em> before guard event + tw)<br>
+                        <code>  &rsquo;Bp-6&rsquo; = when &lt;events G&gt; shall &lt;system response state A&gt; within tw for tf</code> //( Response should have <em>started</em> before guard event + tw)<br>
+                        
 
                         <table class="tg">
                           <tr>
@@ -211,8 +220,8 @@
                       <img src="./help_images/sequence(1).png" width=80%/>
 
                    </b-tab>
-                   <b-tab title="Main Definitions" style="background:white;width:100%;overflow:hidden;">
-                        <maindefview></maindefview>
+                   <b-tab title="T-EARS Unit Tests" style="background:white;width:100%">
+                        <unittest></unittest>
                     </b-tab>
 
                  </b-tabs>
@@ -258,12 +267,12 @@ export default {
   },
   data() {
 	  return {
-		  msgWelcome: 'Welcome to the SAGA Toolbox!',
+		  msgWelcome: 'Welcome to the Napkin Passive Testing Studio!',
 	      msgSelectSignals: 'Select signals in the list to plot.',
 	      buttonText: 'Load file(s)',
 	      callbacks: {},
 	      jsondiff: {},
-	      initialPath: "../../../resources/loggar/TC0998_SAGA_TCOVehSpeed_Trajectory5_whole_2016_10_24_12_53_15.jsondiff",
+	      initialPath: "../client/example_log_data.TXT",
         // initialPath: "../../../resources/loggar/paper_example.jsondiff"
         // ga=../../../resources/ga/SR_C30_SRS_Safe-REQ-283.txt&log=../../../resources/loggar/2_200_0_Passed_20200522_081904_TC-DriveBrake-S-001_SoftCCU_LOGDATA_20200522_081923_00.TXT&main=../../../resources/loggar/main_definitions.ga
         leftTabIndex : 0,
@@ -286,8 +295,8 @@ export default {
   methods: {
     formatLeftPane(){
 
-      if(this.leftTabIndex >= 3 ){
-        console.log("Formatting left pane nr ", this.leftTabIndex)
+      if(this.leftTabIndex >= 1 ){
+        //console.log("Formatting left pane nr ", this.leftTabIndex)
         return  "overflow:scroll;background:yellow";
 
        }
@@ -300,10 +309,7 @@ export default {
         //console.log("Right tab changed to ",e, "Resizing");
         bus.$emit('window-resize');
       });
-      return; // TODO adjust sizes for Batch Evaluator
-        var leftPane      = document.getElementById('left-pane').parentElement;
-
-        leftPane.hidden = (e==1);
+      return; // TODO adjust sizes for Right Panes
 
 
     },

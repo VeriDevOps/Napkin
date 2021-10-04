@@ -351,6 +351,10 @@ import { VueContext } from 'vue-context';
         var helpPane     = document.getElementById("help-pane3");
         helpPane.style['max-height'] = rightPane.offsetHeight -70 + "px";
         helpPane.style['height'] = rightPane.offsetHeight -70 + "px";
+
+        var helpPane     = document.getElementById("help-pane4");
+        helpPane.style['max-height'] = rightPane.offsetHeight -70 + "px";
+        helpPane.style['height'] = rightPane.offsetHeight -70 + "px";
     }
 	},
 	watch: {
