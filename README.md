@@ -28,12 +28,11 @@ In the root of the git repository:
 
 ## Running the Development Environent Container:
 The container does not contain any project specific data, instead you share the napkin git repo you cloned to your local harddrive. Depending on your local system (Windows/Linux/Mac) you may need to adjust the user id in `Docker/Dockerfile.development`, and/or your file permissions on your local machine via the Docker GUI. https://stackoverflow.com/questions/31448821/how-to-write-data-to-host-file-system-from-docker-container <br>
-In your local machine, start the container by:
+In your local machine in the `<napkin>` directory, start the container by:
 
-    export MY_LOCAL_GIT_PROJECT=/Users/dfm01/Documents/aProjects/napkincontainer
-    docker container run --interactive -p 8080:8080 -p 4001:4001 --mount type=bind,source=$MY_LOCAL_GIT_PROJECT,target=/home/ubuntu/proj  --tty --rm tdev bash
+    bash Docker/start-dev-container.sh
 
-The commands mounts the source directory on your harddrive so it is accessible inside the container. Now you can use e.g. vscode to edit the files in your local machine, and the changes are visible to the container. If you get an error message, there is probably some issues with the user "ubuntu" in the container accessing files in your local folder. 
+If you are running windows, look into the script and commit a BAT version. The command mounts the source directory on your harddrive so it is accessible inside the container. Now you can use e.g. vscode to edit the files in your local machine, and the changes are visible to the container. If you get an error message, there is probably some issues with the user "ubuntu" in the container accessing files in your local folder. 
 
 Inside the container, you need to install the npm modules (once, since it writes them to your local harddrive):
 
