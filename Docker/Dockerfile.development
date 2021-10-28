@@ -57,7 +57,8 @@ RUN  n 10.16.3
 RUN  npm install -g npm@6.9.0
 
 # Create a new user ubuntu with password ubuntu
-RUN useradd  -m -d /home/ubuntu -s /bin/bash -g root -G sudo  -u 1001 ubuntu 
+# Make sure the uid (here 1000) matches the one you have on your system (if Linux)
+RUN useradd  -m -d /home/ubuntu -s /bin/bash -g root -G sudo  -u 1000 ubuntu 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN echo 'ubuntu:ubuntu' | chpasswd
 # Make sure the ubuntu user can install packages
