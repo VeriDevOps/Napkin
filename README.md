@@ -27,13 +27,13 @@ In the root of the git repository:
      docker build -f Docker/Dockerfile.development -t tdev .
 
 ## Running the Development Environent Container:
-The container does not contain any project specific data, instead you share the napkin git repo you cloned to your local harddrive.<br>
+The container does not contain any project specific data, instead you share the napkin git repo you cloned to your local harddrive. Depending on your local system (Windows/Linux/Mac) you may need to adjust the user id in `Docker/Dockerfile.development`, and/or your file permissions on your local machine via the Docker GUI. https://stackoverflow.com/questions/31448821/how-to-write-data-to-host-file-system-from-docker-container <br>
 In your local machine, start the container by:
 
     export MY_LOCAL_GIT_PROJECT=/Users/dfm01/Documents/aProjects/napkincontainer
     docker container run --interactive -p 8080:8080 -p 4001:4001 --mount type=bind,source=$MY_LOCAL_GIT_PROJECT,target=/home/ubuntu/proj  --tty --rm tdev bash
 
-The commands mounts the source directory on your harddrive so it is accessible inside the container. Now you can use e.g. vscode to edit the files in your local machine, and the changes are visible to the container. 
+The commands mounts the source directory on your harddrive so it is accessible inside the container. Now you can use e.g. vscode to edit the files in your local machine, and the changes are visible to the container. If you get an error message, there is probably some issues with the user "ubuntu" in the container accessing files in your local folder. 
 
 Inside the container, you need to install the npm modules (once, since it writes them to your local harddrive):
 
@@ -45,10 +45,30 @@ A lot of warnings are issued because the versions are old. This should be fixed 
 
 ## Running The Development Server in the Development Environment Container
 ### Global project settings: 
-    
+There has to be a `session` directory that contains logs and g/a's.
+Note that the back-end server needs to write to this directory, so it typically resides on the same level as the git repo (so it gets mounted properly when starting the container). The structure of that directory looks something like this.
+
+        session
+        ├── GA
+        │   ├── SR_C30_SRS_Safe-REQ-244.txt
+        ├── generated
+        │   ├── ANALYSIS_overview.html
+        ├── log
+        │   ├── CXF1-2020-09-23_FrcEnPatched
+        │   │   ├── 2_200_0_Passed_20200923_120418_TC-DriveBrake-S-001_SoftCCU_LOGDATA_20200923_120439_00.TXT
+        │   │   ├── 2_200_0_Passed_20200923_121147_TC-DriveBrake-S-020_SoftCCU_LOGDATA_20200923_121207_00.TXT
+        │   └── Expert-Sessions
+        │       ├── LOGDATA_20201009_113748_2501_CCUO_A1_IP_80.TXT
+        │       └── LOGDATA_20201009_120327_2501_CCUO_A1_IP_80.TXT
+        ├── main_definitions.ga
+        └── req
+
+
+ This is located by the file `<napkin>/.env` that can be created from the example file as:<br>
+
     cp <napkin>/env_example .env
 
-Adjust if necessary.
+Adjust if necessary. NOTE, that the paths are absolute and you should look inside the container NOT your local file system. 
 ## Starting the development servers:
 In <napkin>/client:<br>
 
@@ -56,7 +76,7 @@ In <napkin>/client:<br>
 
 
 
-# Old stuff
+# Misc Stuff Than May Be Useful Someday
 
 For unknown reason, there is a npm_modules under 
 `client/js/brace` as well. Probably only needed if you rebuild ace editor. A `npm install .`should do it if that is the case. 
