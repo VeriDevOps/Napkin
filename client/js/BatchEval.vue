@@ -318,6 +318,14 @@ export default {
 			reader.readAsText(file);
 
 		},
+    on_bus_re_evaluate_all(){
+       this.files.forEach(currentCtxEntry =>{
+            currentCtxEntry.class="gaEvaluating";
+            currentCtxEntry.progress = "Wait";
+            currentCtxEntry.details  = " Evaluating, Please Wait... ";
+            this.evaluate(currentCtxEntry.ga, currentCtxEntry);
+        });
+    },
     on_window_resize(){
       //console.log("RESIZING BatchEvaluator")
       let self = this;
@@ -358,7 +366,8 @@ export default {
 		var self = this;
 
     bus.$on('window-resize'    , self.on_window_resize); // i.e GUI resize
-
+    bus.$on('new-eval-context-avaliable', this.on_bus_re_evaluate_all);
+    bus.$on('edited-signal-updated', this.on_bus_re_evaluate_all);
 
 	}
 }
@@ -403,6 +412,10 @@ export default {
 .gaFailed {
    font-weight: normal;
   background:red;
+}
+.gaEvaluating {
+   font-weight: normal;
+  background:gray;
 }
 
 #galist_table {

@@ -1,7 +1,9 @@
 
 Papers Published:
 
-- Industrial Scale Passive Testing with T-EARS(Submitted, NOT YET PUBLISHED) https://www.overleaf.com/read/gkndxcnnzsrs
+- Industrial System Level Test Automation - Doctorial Thesis
+- 
+- Industrial Scale Passive Testing with T-EARS  
 - From Natural Language Requirements to Independent Guarded Assertions(QRS2018) https://www.overleaf.com/read/rycqjrckmbhs
 - D. Flemström, T. Gustafsson, and A. Kobetski, “A case study ofinteractive development of passive tests,” in5th International Workshopon Requirements Engineering and Testing (RET’18), June 2, 2018,Gothenburg, Sweden, IEEE/ACM, 2018
 - D. Flemström, T. Gustafsson, and A. Kobetski, “Saga toolbox: Interac-tive testing of guarded assertions,” inSoftware Testing, Verification andValidation (ICST), 2017 
@@ -19,6 +21,6 @@ Videos:
 
 Previous Publications on Independent Guarded Assertions
 
-- Gustafsson, M. Skoglund, A. Kobetski, and D. Sundmark, “Automo-tive system testing by independent guarded assertions,” inProceedings ofthe 8th IEEE International Conference on Software Testing, Verificationand Validation Workshops (ICSTW’15), pp. 1–7, 2015.
+- Gustafsson, M. Skoglund, A. Kobetski, and D. Sundmark, “Automotive system testing by independent guarded assertions,” inProceedings ofthe 8th IEEE International Conference on Software Testing, Verificationand Validation Workshops (ICSTW’15), pp. 1–7, 2015.
 - G. Rodriguez-Navas, A. Kobetski, D. Sundmark, and T. Gustafsson,“Offline analysis of independent guarded assertions in automotiveintegration testing,” inThe 12th IEEE International Conference onEmbedded Software and Systems (ICESS), 2015.
 - T. Gustafsson, M. Skoglund, A. Kobetski, and D. Sundmark, “Automo-tive system testing by independent guarded assertions,” in2015 IEEEEighth International Conference on Software Testing, Verification andValidation Workshops (ICSTW), 2015.

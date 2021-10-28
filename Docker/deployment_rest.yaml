@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: napkinrest
+  labels:
+    app: napkinrest
+spec:
+  ports:
+    - port: 8090
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: napkinrest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: napkinrest
+  labels:
+    app: napkinrest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: napkinrest
+  template:
+    metadata:
+      labels:
+        app: napkinrest
+    spec:
+      containers:
+        - name: napkinrest
+          image: rest

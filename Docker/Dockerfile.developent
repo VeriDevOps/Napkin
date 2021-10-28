@@ -1,0 +1,102 @@
+###############################################
+# Base Image from https://www.mktr.ai/the-data-scientists-quick-guide-to-dockerfiles-with-examples/
+###############################################
+FROM python:3.8-slim as python-base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \ 
+    PIP_NO_CACHE_DIR=off  \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \ 
+    PIP_DEFAULT_TIMEOUT=100  \ 
+    POETRY_VERSION=1.0.5 \
+    POETRY_HOME="/opt/poetry" \ 
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PYSETUP_PATH="/opt/pysetup" \ 
+    VENV_PATH="/opt/pysetup/.venv" 
+
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+
+###############################################
+# Builder Image
+###############################################
+FROM python-base as builder-base
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    curl \
+    build-essential
+
+# install poetry - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+
+# copy project requirement files here to ensure they will be cached.
+WORKDIR $PYSETUP_PATH
+COPY Docker/poetry.lock Docker/pyproject.toml ./
+
+# install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
+RUN poetry update 
+RUN poetry install 
+
+
+###############################################
+# Development Base Image
+###############################################
+FROM python-base as development-base
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+
+RUN apt upgrade
+RUN apt update --yes 
+
+RUN apt install --yes curl
+RUN apt install --yes sudo
+# The project uses an old NPM but the new does not work with out a lot of fixing:
+RUN apt install --yes npm
+RUN  npm install -g n 
+RUN  n 10.16.3 
+RUN  npm install -g npm@6.9.0
+
+# Create a new user ubuntu with password ubuntu
+RUN useradd  -m -d /home/ubuntu -s /bin/bash -g root -G sudo  -u 1001 ubuntu 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN echo 'ubuntu:ubuntu' | chpasswd
+# Make sure the ubuntu user can install packages
+RUN chown -R ubuntu /opt/pysetup/.venv/
+
+# When you start the container, we need to install the local packages from the git-repo
+# Since those files do not exist when we create the container
+RUN echo " [ -d ~/proj/napkin ] && bash ~/proj/napkin/Docker/setup_dev.sh " >> /home/ubuntu/.bashrc
+USER ubuntu
+
+# Set up the environment variables so we can access the development server from outside
+ENV NAPKIN_ROOT=/home/ubuntu/proj
+
+# The webpack developement server
+ENV HOST=0.0.0.0
+ENV PORT=8080
+EXPOSE 8080 4001
+# The back-end sock-server 
+EXPOSE 4001
+
+WORKDIR ${NAPKIN_ROOT}/napkin/client
+
+# on you own machine, prepare the source(the example uses /Users/dfm01/Documents/aProjects/napkincontainer)
+# git clone git@bitbucket.org:danielFlemstrom/napkin.git
+
+# To build the development environment Docker container:
+# In .../napkin/
+# TO BUILD
+# docker build -f Docker/Dockerfile.development -t tdev .
+
+# TO RUN the container:
+# export MY_LOCAL_GIT_PROJECT=/Users/dfm01/Documents/aProjects/napkincontainer
+# docker container run --interactive -p 8080:8080 -p 4001:4001 --mount type=bind,source=$MY_LOCAL_GIT_PROJECT,target=/home/ubuntu/proj  --tty --rm tdev bash
+# Inside the container:
+# cd ...napkin/client
+# npm install
+
+# adjust the .env file in the napkin/ root
+
+# TO RUN the shebang!
+# cd ...napkin/client
+# npm run dev

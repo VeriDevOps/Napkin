@@ -1,0 +1,76 @@
+###############################################
+# Base Image from https://www.mktr.ai/the-data-scientists-quick-guide-to-dockerfiles-with-examples/
+###############################################
+FROM python:3.8-slim as python-base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \ 
+    PIP_NO_CACHE_DIR=off  \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \ 
+    PIP_DEFAULT_TIMEOUT=100  \ 
+    POETRY_VERSION=1.0.5 \
+    POETRY_HOME="/opt/poetry" \ 
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PYSETUP_PATH="/opt/pysetup" \ 
+    VENV_PATH="/opt/pysetup/.venv" 
+
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+
+###############################################
+# Builder Image
+###############################################
+FROM python-base as builder-base
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+    curl \
+    build-essential
+
+# install poetry - respects $POETRY_VERSION & $POETRY_HOME
+RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+
+# copy project requirement files here to ensure they will be cached.
+WORKDIR $PYSETUP_PATH
+COPY poetry.lock pyproject.toml ./
+
+# install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
+RUN poetry install --no-dev
+
+
+###############################################
+# Local Libraries Image
+###############################################
+FROM python-base as production-base
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+
+RUN  ["mkdir","-p","/napkin/"]
+COPY packages_src/ napkin/packages_src
+RUN pip install -e /napkin/packages_src/bt
+
+###############################################
+# Production Image
+###############################################
+FROM production-base
+
+## COMMON
+RUN  ["mkdir","-p","/napkin/dist"]
+COPY ./Docker/.env /napkin/
+
+# 
+COPY dist/ /napkin/dist/
+COPY client/dist/build.js /napkin/dist
+COPY server/rest_srv.py /napkin/server/
+
+EXPOSE 8090
+
+#ENV FLASK_APP=/napkin/server/rest_srv.py
+#CMD [ "python", "-m", "flask", "run", "--host=0.0.0.0","--port=8090"]
+CMD ["python", "/napkin/server/rest_srv.py"]
+#  docker container run --interactive --publish 8090:8090 --tty --rm napkin bash
+# above works with 
+# python /napkin/sercer/rest_svr.py
+
+# MEN varför? och varför funkar inte /evaluate? bara /
+# "The format of the --publish command is [host port]:[container port].
+

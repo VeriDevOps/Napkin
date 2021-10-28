@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: napkinsock
+  labels:
+    app: napkinsock
+spec:
+  ports:
+    - port: 4001
+      protocol: TCP
+  clusterIP: None
+  selector:
+    app: napkinsock
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: napkinsock
+  labels:
+    app: napkinsock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: napkinsock
+  template:
+    metadata:
+      labels:
+        app: napkinsock
+    spec:
+      containers:
+        - name: sock
+          image: sock
