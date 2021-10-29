@@ -64,13 +64,18 @@ RUN echo 'ubuntu:ubuntu' | chpasswd
 # Make sure the ubuntu user can install packages
 RUN chown -R ubuntu /opt/pysetup/.venv/
 
-# When you start the container, we need to install the local packages from the git-repo
-# Since those files do not exist when we create the container
-RUN echo " [ -d ~/proj/napkin ] && bash ~/proj/napkin/Docker/setup_dev.sh " >> /home/ubuntu/.bashrc
-USER ubuntu
 
 # Set up the environment variables so we can access the development server from outside
 ENV NAPKIN_ROOT=/home/ubuntu/proj
+
+# When you start the container, we need to install the local packages from the git-repo
+# Since those files do not exist when we create the container
+RUN echo " [ -d ${NAPKIN_ROOT}/napkin ] && bash ${NAPKIN_ROOT}/napkin/Docker/setup_dev.sh " >> /home/ubuntu/.bashrc
+RUN echo " [ ! -d ${NAPKIN_ROOT}/napkin/client/node_modules ] && cd ${NAPKIN_ROOT}/napkin/client && npm install " >> /home/ubuntu/.bashrc
+RUN echo " [ ! -f ${NAPKIN_ROOT}/napkin/.env ] && cd ${NAPKIN_ROOT}/napkin/ &&  cp example.env .env "  
+USER ubuntu
+
+
 
 # The webpack developement server
 ENV HOST=0.0.0.0
