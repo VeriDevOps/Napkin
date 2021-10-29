@@ -24,7 +24,7 @@ Start with checking out the source there:
 Build the development environment Docker container:<br>
 In the root of the git repository:
 
-     docker build -f Docker/Dockerfile.development -t tdev .
+     bash Docker/build-dev-container.sh
 
 ## Running the Development Environent Container:
 The container does not contain any project specific data, instead you share the napkin git repo you cloned to your local harddrive. Depending on your local system (Windows/Linux/Mac) you may need to adjust the user id in `Docker/Dockerfile.development`, and/or your file permissions on your local machine via the Docker GUI. https://stackoverflow.com/questions/31448821/how-to-write-data-to-host-file-system-from-docker-container <br>
@@ -33,14 +33,10 @@ In your local machine in the `<napkin>` directory, start the container by:
     bash Docker/start-dev-container.sh
 
 If you are running windows, look into the script and commit a BAT version. The command mounts the source directory on your harddrive so it is accessible inside the container. Now you can use e.g. vscode to edit the files in your local machine, and the changes are visible to the container. If you get an error message, there is probably some issues with the user "ubuntu" in the container accessing files in your local folder. 
-
-Inside the container, you need to install the npm modules (once, since it writes them to your local harddrive):
-
-    cd <napkin>/client
-    npm install
-
+The first time the container is started, it will install some npm packages (stored on your local mounted dir). 
+Everytime, it needs to install the local python package from the source. 
 A lot of warnings are issued because the versions are old. This should be fixed by someone...<br>
-
+A default .env is also created if it does not already exist in the napkin git root. 
 
 ## Running The Development Server in the Development Environment Container
 ### Global project settings: 
@@ -63,16 +59,12 @@ Note that the back-end server needs to write to this directory, so it typically 
         └── req
 
 
- This is located by the file `<napkin>/.env` that can be created from the example file as:<br>
-
-    cp <napkin>/env_example .env
-
-Adjust if necessary. NOTE, that the paths are absolute and you should look inside the container NOT your local file system. 
+ This is located by the file `<napkin>/.env` that can adjusted if necessary. NOTE, that the paths are absolute and you should look inside the container NOT your local file system. NOTE also that you should NOT check in the `.env` file!
+ If any errors are encountered, check in `example.end` instead.
 ## Starting the development servers:
 In <napkin>/client:<br>
 
     npm run dev
-
 
 
 # Misc Stuff Than May Be Useful Someday
